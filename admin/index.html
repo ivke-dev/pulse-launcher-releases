@@ -154,6 +154,7 @@ function render() {
       <td>${esc(new Date(u.first_seen).toLocaleDateString())}</td>
       <td>${u.banned ? `<span class="chip ban">Banned</span><div class="reason">${esc(u.ban_reason)}</div>` : '<span class="chip ok">OK</span>'}</td>
       <td class="acts"><button class="btn small gift" data-gift="${esc(u.pulse_id)}">Give coins</button>
+        <button class="btn small" data-resetkey="${esc(u.pulse_id)}" title="Lets this PC sign in to Friends again (after a key mix-up)">Reset key</button>
         ${u.banned ? `<button class="btn small" data-unban="${esc(u.pulse_id)}">Unban</button>`
                    : `<button class="btn small danger" data-ban="${esc(u.pulse_id)}">Ban</button>`}</td>
     </tr>`).join('');
@@ -248,7 +249,18 @@ Amount (use a minus sign to take coins away):`, '500');
   await load();
 }
 
+async function resetKey(pulseId) {
+  const u = users.find(x => x.pulse_id === pulseId);
+  if (!confirm(`Reset the Friends key of ${u?.persona || pulseId}?
+Their Pulse registers its key again on the next sync. Only do this if they can't use Friends.`)) return;
+  const { error } = await db.from('pulse_users').update({ secret_hash: null }).eq('pulse_id', pulseId);
+  if (error) { alert('Could not reset: ' + error.message); return; }
+  alert('Done. Their Friends will work again within a few seconds.');
+}
+
 $('rows').addEventListener('click', e => {
+  const k = e.target.closest('[data-resetkey]');
+  if (k) { resetKey(k.dataset.resetkey); return; }
   const g = e.target.closest('[data-gift]');
   if (g) { giveCoins(g.dataset.gift); return; }
   const b = e.target.closest('[data-ban],[data-unban]'); if (!b) return;
