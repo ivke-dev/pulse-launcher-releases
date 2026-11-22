@@ -119,6 +119,26 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .lvl.c5 { --c: #4e8ddb; } .lvl.c6 { --c: #7652c9; } .lvl.c7 { --c: #c252c9; } .lvl.c8 { --c: #542437; } .lvl.c9 { --c: #997c52; }
 .bicons { display: flex; gap: 4px; flex-wrap: wrap; } .bicons img { width: 26px; height: 26px; object-fit: contain; }
 .post .thumb.badge { background-size: contain; background-repeat: no-repeat; background-position: center; width: 70px; aspect-ratio: 1; }
+.ns-prev { margin-top: 8px; font-size: 22px; font-weight: 600; }
+.ns { position: relative; display: inline-block; }
+.ns-gold, .ns-silver, .ns-ruby, .ns-sapphire, .ns-rainbow { -webkit-background-clip: text; background-clip: text; color: transparent !important; background-size: 200% auto; animation: nsShine 3.5s linear infinite; }
+.ns-gold { background-image: linear-gradient(100deg, #b8860b, #ffe680 25%, #fff6c8 35%, #d4a017 50%, #ffe680 75%, #b8860b); }
+.ns-silver { background-image: linear-gradient(100deg, #8d939b, #f4f6f8 25%, #fff 35%, #b9bec5 50%, #f4f6f8 75%, #8d939b); }
+.ns-ruby { background-image: linear-gradient(100deg, #7a0019, #ff3b5c 25%, #ffb3c1 35%, #c3002f 50%, #ff3b5c 75%, #7a0019); }
+.ns-sapphire { background-image: linear-gradient(100deg, #0b2a8a, #3fa9ff 25%, #c4e8ff 35%, #1452d8 50%, #3fa9ff 75%, #0b2a8a); }
+.ns-rainbow { background-image: linear-gradient(90deg, #ff2b2b, #ff9f1a, #ffe81a, #3cff4a, #1ad8ff, #7a5cff, #ff2bd6, #ff2b2b); background-size: 300% auto; }
+@keyframes nsShine { to { background-position: -200% center; } }
+.ns-neon { color: #b8fbff !important; text-shadow: 0 0 4px #22d3ee, 0 0 10px #22d3ee; }
+.ns-glitch { color: #fff; } .ns-glitch::before, .ns-glitch::after { content: attr(data-text); position: absolute; left: 0; top: 0; }
+.ns-glitch::before { color: #ff2b6a; transform: translate(-2px, 0); clip-path: inset(0 0 55% 0); }
+.ns-glitch::after { color: #22e5ff; transform: translate(2px, 0); clip-path: inset(50% 0 0 0); }
+.sk-prev { --a: #e23b4e; --b: #2fbf71; --bg: #0b1310; --pn: #111c17; position: relative; height: 110px; margin: 10px 0; border-radius: 10px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); }
+.sk-prev i { position: absolute; left: 0; right: 0; top: 0; height: 20px; background: var(--pn); border-bottom: 2px solid var(--a); }
+.sk-prev b { position: absolute; left: 0; top: 22px; bottom: 0; width: 60px; background: var(--pn); }
+.sk-prev span { position: absolute; top: 36px; width: 46px; height: 60px; border-radius: 6px; background: linear-gradient(135deg, var(--a), var(--b)); }
+.sk-prev span:nth-of-type(1) { left: 76px; } .sk-prev span:nth-of-type(2) { left: 132px; opacity: .8; } .sk-prev span:nth-of-type(3) { left: 188px; opacity: .6; }
+.sk-prev.snow::after { content: "❄ ❅ ❆ ❄ ❅"; position: absolute; inset: 0; color: #fff; opacity: .5; font-size: 14px; letter-spacing: 18px; padding: 26px 0 0 70px; }
+.check { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 .soon-box b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
 </style>
 </head>
@@ -163,7 +183,12 @@ tr:hover td { background: rgba(255,255,255,.015); }
             <option value="game">A game from the Pulse Store</option>
             <option value="discount">A discount on a game</option>
             <option value="balance">Balance (€)</option>
+            <option value="namestyle">A name style (glitch, gold, ...)</option>
           </select>
+          <div id="cStyleWrap" hidden><label for="cStyle">Name style</label>
+            <select id="cStyle"><option value="glitch">Glitch</option><option value="gold">Gold</option><option value="silver">Silver</option>
+              <option value="ruby">Ruby</option><option value="sapphire">Sapphire</option><option value="rainbow">Rainbow</option><option value="neon">Neon</option></select>
+            <div class="ns-prev" id="cStylePrev">PlayerName</div></div>
           <div id="cAmountWrap"><label for="cAmount" id="cAmountLabel">Pulse Points</label><input type="number" id="cAmount" min="1" value="500"></div>
           <div id="cGameWrap" hidden><label for="cGame">Game</label><select id="cGame"></select></div>
           <div class="two">
@@ -229,9 +254,12 @@ tr:hover td { background: rgba(255,255,255,.015); }
           <label>Icon (square)</label>
           <div class="drop" data-pick="icon"><img alt="" hidden><span>Click to choose an image</span></div>
           <div class="two">
-            <div><label for="gPrice">Price (Pulse Points)</label><input type="number" id="gPrice" min="0" max="10000000" value="0"></div>
-            <div><label for="gDisc">Discount %</label><input type="number" id="gDisc" min="0" max="95" value="0"></div>
+            <div><label for="gPrice">Price (Pulse Points, 0 = not for points)</label><input type="number" id="gPrice" min="0" max="10000000" value="0"></div>
+            <div><label for="gEur">Price in € (paid from balance, 0 = not for €)</label><input type="number" id="gEur" min="0" max="1000000" step="0.01" value="0"></div>
           </div>
+          <label for="gDisc">Discount % (points and €)</label><input type="number" id="gDisc" min="0" max="95" value="0">
+          <label for="gShots">Screenshots for the store page (one https link per line, up to 12)</label>
+          <textarea id="gShots" rows="3" placeholder="https://…/screenshot1.jpg"></textarea>
           <label for="gDiscUntil">Discount ends (empty = until you change it)</label><input type="datetime-local" id="gDiscUntil">
           <label>Game file (.zip with the game, or a single .exe)</label>
           <div class="drop" id="gFileDrop"><span id="gFileText">Click to upload the game file — players download it inside Pulse</span></div>
@@ -276,7 +304,18 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <form class="card form" id="iForm">
           <h3>Upload a cosmetic</h3>
           <label for="iKind">Type</label>
-          <select id="iKind"><option value="theme">Profile background</option><option value="frame">Avatar frame (transparent PNG, square)</option></select>
+          <select id="iKind"><option value="theme">Profile background</option><option value="frame">Avatar frame (transparent PNG, square)</option>
+            <option value="avatar">Animated avatar (GIF, square)</option><option value="miniprofile">Mini profile background (GIF/PNG, wide)</option>
+            <option value="skin">Launcher theme (colours for all of Pulse)</option></select>
+          <div id="iSkin" hidden>
+            <div class="two"><div><label for="skAccent">Main colour</label><input type="color" id="skAccent" value="#e23b4e"></div>
+              <div><label for="skAccent2">Second colour</label><input type="color" id="skAccent2" value="#2fbf71"></div></div>
+            <div class="two"><div><label for="skBg">Background</label><input type="color" id="skBg" value="#0b1310"></div>
+              <div><label for="skPanel">Panels</label><input type="color" id="skPanel" value="#111c17"></div></div>
+            <label class="check"><input type="checkbox" id="skSnow"> Falling snow</label>
+            <div class="sk-prev" id="skPrev"><i></i><b></b><span></span><span></span><span></span></div>
+            <p class="reason">The image below is optional for launcher themes (shown faintly behind the launcher).</p>
+          </div>
           <label for="iName">Name</label><input type="text" id="iName" maxlength="60" required>
           <label for="iDesc">Description</label><input type="text" id="iDesc" maxlength="200">
           <label for="iPrice">Price (Pulse Points)</label><input type="number" id="iPrice" min="0" max="10000000" value="500">
@@ -859,9 +898,12 @@ $('gForm').addEventListener('submit', async e => {
       discount_pct: Math.min(95, Math.max(0, parseInt($('gDisc').value || '0', 10))), discount_until: fromLocalInput($('gDiscUntil').value),
       download_url: dl, achievements, published: $('gPub').checked, launch_exe: $('gExe').value.trim(),
       download_size: gFileSize || null,
+      price_cents: Math.max(0, Math.round(parseFloat(($('gEur').value || '0').replace(',', '.')) * 100) || 0),
+      screenshots: $('gShots').value.split(/\s+/).map(x => x.trim()).filter(x => x.startsWith('https://')).slice(0, 12),
       banner_url: await uploadImage(picked.banner, 'games'), icon_url: await uploadImage(picked.icon, 'games'),
     };
     let res = gEditing ? await db.from('pulse_games').update(row).eq('id', gEditing) : await db.from('pulse_games').insert(row);
+    if (res.error && /price_cents|screenshots/.test(res.error.message)) throw new Error(res.error.message + ' — run supabase/011_checkout.sql first.');
     if (res.error && /launch_exe|download_size/.test(res.error.message)) {
       // 008_downloads.sql not run yet: save without the new fields
       delete row.launch_exe; delete row.download_size;
@@ -881,7 +923,8 @@ $('gList').addEventListener('click', async e => {
   if (ed) {
     clearGameForm(); gEditing = g.id;
     $('gTitle').value = g.title; $('gDev').value = g.developer; $('gShort').value = g.short_desc; $('gDesc').value = g.description;
-    $('gPrice').value = g.price_points; $('gDisc').value = g.discount_pct; $('gDiscUntil').value = toLocalInput(g.discount_until);
+    $('gPrice').value = g.price_points; $('gDisc').value = g.discount_pct;
+    $('gEur').value = ((g.price_cents || 0) / 100).toFixed(2); $('gShots').value = (g.screenshots || []).join('\n'); $('gDiscUntil').value = toLocalInput(g.discount_until);
     $('gDl').value = g.download_url; $('gPub').checked = g.published; $('gExe').value = g.launch_exe || ''; gFileSize = g.download_size || 0;
     setDrop('banner', g.banner_url || null); setDrop('icon', g.icon_url || null);
     (g.achievements || []).forEach(achRow);
@@ -928,7 +971,8 @@ $('guForm').addEventListener('submit', async e => {
 let codeWait = 0, codeTimer = null;
 function codeKindUI() {
   const k = $('cKind').value;
-  $('cAmountWrap').hidden = k === 'game';
+  $('cAmountWrap').hidden = k === 'game' || k === 'namestyle';
+  $('cStyleWrap').hidden = k !== 'namestyle';
   $('cGameWrap').hidden = !['game', 'discount'].includes(k);
   $('cGame').querySelector('option[value=""]').hidden = k === 'game';
   if (k === 'game' && !$('cGame').value && games[0]) $('cGame').value = games[0].id;
@@ -936,11 +980,14 @@ function codeKindUI() {
   $('cAmount').step = k === 'balance' ? '0.01' : '1';
 }
 $('cKind').addEventListener('change', codeKindUI);
+$('cStyle').addEventListener('change', () => { $('cStylePrev').className = 'ns-prev ns ns-' + $('cStyle').value; $('cStylePrev').dataset.text = 'PlayerName'; });
+$('cStyle').dispatchEvent(new Event('change'));
 function describeCode(c) {
   const g = games.find(x => x.id === c.game_id);
   return c.kind === 'coins' ? `⚡ ${Number(c.amount).toLocaleString()} points`
     : c.kind === 'game' ? `Game: ${esc(g ? g.title : '#' + c.game_id)}`
     : c.kind === 'discount' ? `-${c.amount}% ${g ? 'on ' + esc(g.title) : 'on any game'}`
+    : c.kind === 'namestyle' ? `Name style: <span class="ns ns-${esc(c.style || '')}" data-text="${esc(c.style || '')}">${esc(c.style || '')}</span>`
     : `€${(c.amount / 100).toFixed(2)} balance`;
 }
 async function loadCodes() {
@@ -971,9 +1018,10 @@ $('cForm').addEventListener('submit', async e => {
   const game = $('cGame').value ? Number($('cGame').value) : null;
   setMsg('cMsg', 'Generating…'); $('cSubmit').disabled = true;
   const { data, error } = await db.rpc('pulse_make_code', {
-    p_kind: k, p_amount: k === 'game' ? 0 : Math.round(amount), p_game: ['game', 'discount'].includes(k) ? game : null,
-    p_max_uses: parseInt($('cUses').value || '1', 10), p_expires: fromLocalInput($('cExp').value), p_note: $('cNote').value.trim() });
-  if (error) { setMsg('cMsg', error.message + (error.code === 'PGRST202' ? ' — run supabase/005_store.sql first.' : ''), true); $('cSubmit').disabled = false; return; }
+    p_kind: k, p_amount: ['game', 'namestyle'].includes(k) ? 0 : Math.round(amount), p_game: ['game', 'discount'].includes(k) ? game : null,
+    p_max_uses: parseInt($('cUses').value || '1', 10), p_expires: fromLocalInput($('cExp').value), p_note: $('cNote').value.trim(),
+    p_style: k === 'namestyle' ? $('cStyle').value : null });
+  if (error) { setMsg('cMsg', error.message + (error.code === 'PGRST202' ? ' — run supabase/010_profile.sql first.' : ''), true); $('cSubmit').disabled = false; return; }
   if (data.result === 'wait') { setMsg('cMsg', `Wait ${data.seconds} seconds before the next code.`, true); codeWait = data.seconds; tickCodeWait(); return; }
   setMsg('cMsg', 'New code — send it to the player:');
   $('cNew').hidden = false; $('cNewCode').textContent = data.code;
@@ -999,6 +1047,16 @@ async function giveBalance(pulseId) {
   await load();
 }
 
+/* ---------- Launcher theme maker ---------- */
+function skinPreview() {
+  const p = $('skPrev');
+  p.style.setProperty('--a', $('skAccent').value); p.style.setProperty('--b', $('skAccent2').value);
+  p.style.setProperty('--bg', $('skBg').value); p.style.setProperty('--pn', $('skPanel').value);
+  p.classList.toggle('snow', $('skSnow').checked);
+}
+['skAccent', 'skAccent2', 'skBg', 'skPanel', 'skSnow'].forEach(id => $(id).addEventListener('input', skinPreview));
+$('iKind').addEventListener('change', () => { $('iSkin').hidden = $('iKind').value !== 'skin'; skinPreview(); });
+
 /* ---------- Themes & frames ---------- */
 let items = [];
 async function loadItems() {
@@ -1006,22 +1064,24 @@ async function loadItems() {
   if (error) { $('iList').innerHTML = `<div class="empty">${/pulse_items/.test(error.message) ? 'Run supabase/005_store.sql first.' : esc(error.message)}</div>`; return; }
   items = data;
   $('iList').innerHTML = items.map(i => `<div class="post">
-      <div class="thumb${i.kind === 'frame' ? ' frame' : ''}" style="background-image:url('${esc(i.image_url)}')"></div>
+      <div class="thumb${i.kind === 'frame' ? ' frame' : ''}" style="${i.kind === 'skin' && !i.image_url ? `background:linear-gradient(135deg, ${esc((i.data || {}).accent || '#7c5cff')}, ${esc((i.data || {}).accent2 || '#22d3ee')})` : `background-image:url('${esc(i.image_url)}')`}"></div>
       <div><b>${esc(i.name)}</b><p>${esc(i.description)}</p>
-        <div class="meta">${i.kind === 'frame' ? 'Avatar frame' : 'Profile background'} · ⚡ ${Number(i.price_points).toLocaleString()} · ${i.published ? '<span class="chip ok">In shop</span>' : '<span class="chip ban">Hidden</span>'}</div></div>
+        <div class="meta">${{ frame: 'Avatar frame', avatar: 'Animated avatar', miniprofile: 'Mini profile', skin: 'Launcher theme' }[i.kind] || 'Profile background'} · ⚡ ${Number(i.price_points).toLocaleString()} · ${i.published ? '<span class="chip ok">In shop</span>' : '<span class="chip ban">Hidden</span>'}</div></div>
       <div class="acts"><button class="btn small" data-ipub="${i.id}">${i.published ? 'Hide' : 'Show'}</button>
         <button class="btn small danger" data-idel="${i.id}">Delete</button></div></div>`).join('')
     || '<div class="empty">Nothing uploaded yet.</div>';
 }
 $('iForm').addEventListener('submit', async e => {
   e.preventDefault();
-  if (!picked.item) { setMsg('iMsg', 'Choose an image first.', true); return; }
+  if (!picked.item && $('iKind').value !== 'skin') { setMsg('iMsg', 'Choose an image first.', true); return; }
   setMsg('iMsg', 'Uploading…');
   try {
-    const row = { kind: $('iKind').value, name: $('iName').value.trim(), description: $('iDesc').value.trim(),
+    const kind = $('iKind').value;
+    const row = { kind, name: $('iName').value.trim(), description: $('iDesc').value.trim(),
                   price_points: Math.max(0, parseInt($('iPrice').value || '0', 10)), image_url: await uploadImage(picked.item, 'cosmetics') };
+    if (kind === 'skin') row.data = { accent: $('skAccent').value, accent2: $('skAccent2').value, bg: $('skBg').value, panel: $('skPanel').value, snow: $('skSnow').checked };
     const { error } = await db.from('pulse_items').insert(row);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message + (/kind_check/.test(error.message) ? ' — run supabase/010_profile.sql first.' : ''));
     $('iForm').reset(); setDrop('item', null); setMsg('iMsg', 'Added to the Points Shop.'); loadItems();
   } catch (err) { setMsg('iMsg', err.message, true); }
 });
