@@ -71,6 +71,48 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .acts .btn + .btn { margin-left: 6px; }
 .btn.gift { background: rgba(124,92,255,.14); border-color: rgba(124,92,255,.5); color: #c4b5fd; }
 .table-wrap { overflow-x: auto; }
+.tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.tabs button { background: none; border: none; padding: 12px 18px; cursor: pointer; color: var(--muted); font-size: 14px; font-weight: 600; position: relative; }
+.tabs button:hover { color: var(--text); }
+.tabs button.on { color: var(--text); }
+.tabs button.on::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px; background: var(--grad); }
+.tabs .soon { font-size: 10px; font-weight: 600; letter-spacing: .06em; color: var(--faint); margin-left: 6px; }
+.grid2 { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; }
+@media (max-width: 960px) { .grid2 { grid-template-columns: 1fr; } }
+.form label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
+.form input[type=text], .form textarea, .form select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font: inherit; font-size: 14px; }
+.form textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+.form input:focus, .form textarea:focus, .form select:focus { outline: none; border-color: var(--violet); }
+.form h3, .card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 17px; }
+.drop { margin-top: 6px; border: 1px dashed #343b50; border-radius: 12px; padding: 14px; text-align: center; color: var(--muted); font-size: 13px; cursor: pointer; }
+.drop:hover { border-color: var(--violet); color: var(--text); }
+.drop img { display: block; max-width: 100%; max-height: 200px; margin: 0 auto 8px; border-radius: 8px; }
+.row-actions { display: flex; gap: 8px; margin-top: 16px; }
+.post { display: grid; grid-template-columns: 140px 1fr auto; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.post:last-child { border-bottom: none; }
+.post .thumb { width: 140px; aspect-ratio: 16/9; border-radius: 8px; background: var(--raise-2) center/cover; }
+.post b { display: block; font-size: 15px; }
+.post p { font-size: 13px; color: var(--muted); margin-top: 4px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.post .meta { font-size: 12px; color: var(--faint); margin-top: 6px; }
+.post .acts { display: flex; flex-direction: column; gap: 6px; }
+.soon-box { text-align: center; padding: 60px 20px; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form input[type=number], .form input[type=datetime-local] { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font: inherit; font-size: 14px; color-scheme: dark; }
+.check { display: flex !important; gap: 8px; align-items: center; color: var(--text) !important; font-size: 13px !important; }
+.ach-row { display: grid; grid-template-columns: 52px 1fr 1.4fr 80px auto; gap: 6px; align-items: center; margin-bottom: 6px; }
+.ach-row input { padding: 8px 9px !important; font-size: 13px !important; }
+.drop.mini { margin: 0; padding: 0; height: 44px; display: grid; place-items: center; font-size: 11px; overflow: hidden; }
+.drop.mini img { max-height: 44px; margin: 0; border-radius: 6px; }
+.newcode { display: flex; gap: 10px; align-items: center; margin-top: 10px; padding: 12px 14px; border-radius: 10px; background: rgba(124,92,255,.12); border: 1px solid rgba(124,92,255,.4); }
+.newcode span { font-family: Consolas, monospace; font-size: 18px; letter-spacing: .1em; user-select: all; flex: 1; }
+.post .thumb.frame { background-size: contain; background-repeat: no-repeat; background-position: center; background-color: var(--raise-2); }
+.rep { display: grid; grid-template-columns: 160px 1fr auto; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); align-items: start; }
+.rep-img { display: block; max-width: 160px; max-height: 120px; border-radius: 6px; object-fit: contain; background: var(--raise-2); }
+.rep-img.small { max-width: 60px; max-height: 60px; float: left; margin-right: 8px; }
+.rep-text { font-size: 13px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: hidden; }
+.rep-info { font-size: 13px; }
+.rep-acts { display: flex; flex-direction: column; gap: 6px; }
+.soon-box b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -84,7 +126,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
   <!-- Sign in -->
   <div class="card login" id="loginView">
     <h2>Sign in</h2>
-    <p>Only Pulse admins can see the user list.</p>
+    <p>Only Pulse admins can sign in.</p>
     <form id="loginForm">
       <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
       <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
@@ -93,8 +135,158 @@ tr:hover td { background: rgba(255,255,255,.015); }
     <div class="msg" id="loginMsg"></div>
   </div>
 
-  <!-- Users -->
   <div id="appView" hidden>
+    <nav class="tabs" id="tabs">
+      <button data-tab="points">Points</button>
+      <button data-tab="games">Games</button>
+      <button data-tab="news">News</button>
+      <button class="on" data-tab="users">Users</button>
+      <button data-tab="themes">Themes</button>
+    </nav>
+
+    <!-- Points: give coins, redeem codes -->
+    <section id="tab-points" hidden>
+      <div class="grid2">
+        <form class="card form" id="cForm">
+          <h3>Make a redeem code</h3>
+          <label for="cKind">The code gives</label>
+          <select id="cKind">
+            <option value="coins">Pulse Points</option>
+            <option value="game">A game from the Pulse Store</option>
+            <option value="discount">A discount on a game</option>
+            <option value="balance">Balance (€)</option>
+          </select>
+          <div id="cAmountWrap"><label for="cAmount" id="cAmountLabel">Pulse Points</label><input type="number" id="cAmount" min="1" value="500"></div>
+          <div id="cGameWrap" hidden><label for="cGame">Game</label><select id="cGame"></select></div>
+          <div class="two">
+            <div><label for="cUses">How many players can use it</label><input type="number" id="cUses" min="1" max="100000" value="1"></div>
+            <div><label for="cExp">Expires (optional)</label><input type="datetime-local" id="cExp"></div>
+          </div>
+          <label for="cNote">Note (only admins see it)</label><input type="text" id="cNote" maxlength="200" placeholder="Giveaway on Discord">
+          <div class="row-actions"><button class="btn primary" type="submit" id="cSubmit">Generate code</button></div>
+          <div class="msg" id="cMsg"></div>
+          <div class="newcode" id="cNew" hidden><span id="cNewCode"></span><button class="btn small" type="button" id="cCopy">Copy</button></div>
+        </form>
+        <div class="card">
+          <h3>Codes</h3>
+          <div class="table-wrap"><table><thead><tr><th>Code</th><th>Gives</th><th>Used</th><th>Expires</th><th></th></tr></thead><tbody id="cRows"></tbody></table></div>
+        </div>
+      </div>
+      <div class="bar" style="margin-top:22px">
+        <input class="search" id="pSearch" placeholder="Search name, Steam ID or Pulse ID" autocomplete="off">
+      </div>
+      <div class="card table-wrap" style="padding:6px 8px">
+        <table><thead><tr><th>Player</th><th>Pulse ID</th><th>Coins</th><th>Given by admins</th><th>Balance</th><th></th></tr></thead>
+          <tbody id="pRows"></tbody></table>
+      </div>
+    </section>
+
+    <!-- News: shown in the launcher (Community + megaphone) -->
+    <section id="tab-news" hidden>
+      <div class="grid2">
+        <form class="card form" id="newsForm">
+          <h3 id="newsFormTitle">New post</h3>
+          <label for="nTitle">Title</label><input type="text" id="nTitle" maxlength="140" required placeholder="Pulse 0.1.0 is here">
+          <label for="nKind">Type</label>
+          <select id="nKind"><option value="news">News</option><option value="update">Update</option><option value="event">Event</option></select>
+          <label for="nBody">Text</label><textarea id="nBody" maxlength="8000" placeholder="What's new?"></textarea>
+          <label>Image (optional, up to 5 MB)</label>
+          <div class="drop" id="nDrop"><img id="nPreview" alt="" hidden><span id="nDropText">Click to choose a PNG, JPG, WEBP or GIF</span></div>
+          <input type="file" id="nFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          <div class="row-actions">
+            <button class="btn primary" type="submit" id="nSubmit">Publish</button>
+            <button class="btn" type="button" id="nClear">Clear</button>
+            <button class="btn small" type="button" id="nNoImg" hidden>Remove image</button>
+          </div>
+          <div class="msg" id="nMsg"></div>
+        </form>
+        <div class="card">
+          <h3>Posts</h3>
+          <div id="newsList"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Games in the Pulse Store -->
+    <section id="tab-games" hidden>
+      <div class="grid2">
+        <form class="card form" id="gForm">
+          <h3 id="gFormTitle">Add a game</h3>
+          <label for="gTitle">Title</label><input type="text" id="gTitle" maxlength="120" required>
+          <label for="gDev">Developer</label><input type="text" id="gDev" maxlength="120" placeholder="Your studio">
+          <label for="gShort">Short description (on the card)</label><input type="text" id="gShort" maxlength="300">
+          <label for="gDesc">Description</label><textarea id="gDesc" maxlength="10000"></textarea>
+          <label>Banner (wide, about 920×430)</label>
+          <div class="drop" data-pick="banner"><img alt="" hidden><span>Click to choose an image</span></div>
+          <label>Icon (square)</label>
+          <div class="drop" data-pick="icon"><img alt="" hidden><span>Click to choose an image</span></div>
+          <div class="two">
+            <div><label for="gPrice">Price (Pulse Points)</label><input type="number" id="gPrice" min="0" max="10000000" value="0"></div>
+            <div><label for="gDisc">Discount %</label><input type="number" id="gDisc" min="0" max="95" value="0"></div>
+          </div>
+          <label for="gDiscUntil">Discount ends (empty = until you change it)</label><input type="datetime-local" id="gDiscUntil">
+          <label for="gDl">Download link (https, e.g. your itch.io / Google Drive / GitHub release)</label><input type="text" id="gDl" placeholder="https://…">
+          <label>Achievements (unlocked by playtime)</label>
+          <div id="gAchs"></div>
+          <button class="btn small" type="button" id="gAchAdd">+ Add achievement</button>
+          <label class="check"><input type="checkbox" id="gPub" checked> Visible in the store</label>
+          <div class="row-actions">
+            <button class="btn primary" type="submit" id="gSubmit">Add game</button>
+            <button class="btn" type="button" id="gClear">Clear</button>
+          </div>
+          <div class="msg" id="gMsg"></div>
+        </form>
+        <div>
+          <div class="card">
+            <h3>Games</h3>
+            <div id="gList"><div class="empty">Loading…</div></div>
+          </div>
+          <form class="card form" id="guForm" style="margin-top:18px" hidden>
+            <h3>Write an update for <span id="guGame"></span></h3>
+            <label for="guTitle">Title</label><input type="text" id="guTitle" maxlength="140" required placeholder="Patch 1.2: new map">
+            <label for="guKind">Type</label>
+            <select id="guKind"><option value="update">Regular update</option><option value="major">Major update</option><option value="news">News</option></select>
+            <label for="guBody">Text</label><textarea id="guBody" maxlength="8000"></textarea>
+            <label>Image (optional)</label>
+            <div class="drop" data-pick="update"><img alt="" hidden><span>Click to choose an image</span></div>
+            <div class="row-actions"><button class="btn primary" type="submit">Post update</button><button class="btn" type="button" id="guClose">Close</button></div>
+            <div class="msg" id="guMsg"></div>
+            <div id="guList" style="margin-top:12px"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Themes & avatar frames -->
+    <section id="tab-themes" hidden>
+      <div class="grid2">
+        <form class="card form" id="iForm">
+          <h3>Upload a cosmetic</h3>
+          <label for="iKind">Type</label>
+          <select id="iKind"><option value="theme">Profile background</option><option value="frame">Avatar frame (transparent PNG, square)</option></select>
+          <label for="iName">Name</label><input type="text" id="iName" maxlength="60" required>
+          <label for="iDesc">Description</label><input type="text" id="iDesc" maxlength="200">
+          <label for="iPrice">Price (Pulse Points)</label><input type="number" id="iPrice" min="0" max="10000000" value="500">
+          <label>Image</label>
+          <div class="drop" data-pick="item"><img alt="" hidden><span>Click to choose an image</span></div>
+          <div class="row-actions"><button class="btn primary" type="submit">Upload</button></div>
+          <div class="msg" id="iMsg"></div>
+        </form>
+        <div class="card"><h3>In the Points Shop</h3><div id="iList"><div class="empty">Loading…</div></div></div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <div class="bar" style="margin-bottom:6px"><h3 style="font-family:'Space Grotesk',sans-serif">Community Market</h3><span class="right" id="mkStats"></span></div>
+        <div id="mkList"><div class="empty">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section id="tab-users">
+    <div class="card" id="reportsCard" style="margin-bottom:18px">
+      <div class="bar" style="margin-bottom:6px"><h3 style="font-family:'Space Grotesk',sans-serif">Reports <span class="chip ban" id="repCount" hidden></span></h3>
+        <div class="filters" id="repFilter" style="margin-left:auto"><button class="on" data-rf="open">Open</button><button data-rf="all">All</button></div></div>
+      <div id="repList"><div class="empty">Loading…</div></div>
+    </div>
     <div class="tiles">
       <div class="card tile"><div class="l">Users</div><div class="v" id="tTotal">0</div></div>
       <div class="card tile"><div class="l">Active now</div><div class="v" id="tOnline">0</div></div>
@@ -116,6 +308,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
       </table>
       <div class="empty" id="empty" hidden>No players yet.</div>
     </div>
+    </section>
   </div>
 </div>
 
@@ -152,9 +345,15 @@ function render() {
         ${u.bonus_points ? `<div class="reason">${u.bonus_points > 0 ? '+' : ''}${Number(u.bonus_points).toLocaleString()} given${u.bonus_note ? ' · ' + esc(u.bonus_note) : ''}</div>` : ''}</td>
       <td><span class="dot${isActive(u) ? ' on' : ''}"></span>${esc(ago(u.last_seen))}</td>
       <td>${esc(new Date(u.first_seen).toLocaleDateString())}</td>
-      <td>${u.banned ? `<span class="chip ban">Banned</span><div class="reason">${esc(u.ban_reason)}</div>` : '<span class="chip ok">OK</span>'}</td>
+      <td>${u.banned ? `<span class="chip ban">Banned</span><div class="reason">${esc(u.ban_reason)}</div>` : '<span class="chip ok">OK</span>'}
+        ${u.community_banned ? `<div><span class="chip ban">Community ban</span></div>` : u.community_bans ? `<div class="reason">${u.community_bans} community ban(s) on record</div>` : ''}
+        ${warnCount[u.pulse_id] ? `<div class="reason">⚠ ${warnCount[u.pulse_id]} warning(s)</div>` : ''}</td>
       <td class="acts"><button class="btn small gift" data-gift="${esc(u.pulse_id)}">Give coins</button>
         <button class="btn small" data-resetkey="${esc(u.pulse_id)}" title="Lets this PC sign in to Friends again (after a key mix-up)">Reset key</button>
+        <button class="btn small" data-warn="${esc(u.pulse_id)}">Warn</button>
+        <button class="btn small" data-guardreset="${esc(u.pulse_id)}" title="Turns Pulse Guard (2FA) off, e.g. after a lost phone">Reset 2FA</button>
+        ${u.community_banned ? `<button class="btn small" data-cunban="${esc(u.pulse_id)}">Lift community ban</button>`
+                             : `<button class="btn small danger" data-cban="${esc(u.pulse_id)}">Community ban</button>`}
         ${u.banned ? `<button class="btn small" data-unban="${esc(u.pulse_id)}">Unban</button>`
                    : `<button class="btn small danger" data-ban="${esc(u.pulse_id)}">Ban</button>`}</td>
     </tr>`).join('');
@@ -169,8 +368,13 @@ async function load() {
   const { data, error } = await db.from('pulse_users').select('*').order('last_seen', { ascending: false }).limit(2000);
   if (error) { $('updated').textContent = 'Could not load: ' + error.message; return; }
   users = data;
+  const wr = await db.from('pulse_warnings').select('pulse_id').limit(5000);
+  warnCount = {};
+  for (const w of (wr.data || [])) warnCount[w.pulse_id] = (warnCount[w.pulse_id] || 0) + 1;
+  loadReports();
   $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
   render();
+  if (tab === 'points') renderPoints();
 }
 
 async function setBan(pulseId, banned) {
@@ -205,6 +409,7 @@ async function showApp(session) {
   }
   $('appView').hidden = false;
   await load();
+  showTab(pendingTab);
 }
 
 async function start() {
@@ -259,6 +464,9 @@ Their Pulse registers its key again on the next sync. Only do this if they can't
 }
 
 $('rows').addEventListener('click', e => {
+  const w = e.target.closest('[data-warn]'); if (w) { warnUser(w.dataset.warn); return; }
+  const gr = e.target.closest('[data-guardreset]'); if (gr) { guardReset(gr.dataset.guardreset); return; }
+  const cb = e.target.closest('[data-cban],[data-cunban]'); if (cb) { communityBan(cb.dataset.cban || cb.dataset.cunban, !!cb.dataset.cban); return; }
   const k = e.target.closest('[data-resetkey]');
   if (k) { resetKey(k.dataset.resetkey); return; }
   const g = e.target.closest('[data-gift]');
@@ -266,6 +474,522 @@ $('rows').addEventListener('click', e => {
   const b = e.target.closest('[data-ban],[data-unban]'); if (!b) return;
   setBan(b.dataset.ban || b.dataset.unban, !!b.dataset.ban);
 });
+/* ---------- Reports, warnings, community bans ---------- */
+let warnCount = {}, reports = [], repFilter = 'open';
+const imgData = {};
+async function adminImage(id) {
+  if (!id) return '';
+  if (imgData[id] !== undefined) return imgData[id];
+  const { data } = await db.rpc('pulse_image', { p_id: id });
+  return (imgData[id] = data && data.mime ? `data:${data.mime};base64,${data.b64}` : '');
+}
+async function reportPreview(r) {
+  if (r.kind === 'avatar') { const u = await adminImage(r.ref_id); return u ? `<img class="rep-img" src="${u}" alt="">` : '<span class="reason">(picture already removed)</span>'; }
+  if (r.kind === 'artwork') {
+    const { data } = await db.from('pulse_artwork').select('image_id,title,removed').eq('id', r.ref_id);
+    const a = data && data[0]; if (!a) return '';
+    const u = a.removed ? '' : await adminImage(a.image_id);
+    return u ? `<img class="rep-img" src="${u}" alt=""><div class="reason">${esc(a.title)}</div>` : '<span class="reason">(artwork removed)</span>';
+  }
+  if (r.kind === 'comment') {
+    const { data } = await db.from('pulse_comments').select('body,removed').eq('id', r.ref_id);
+    const c = data && data[0]; return c ? `<div class="rep-text">${c.removed ? '<i>(removed)</i> ' : ''}${esc(c.body)}</div>` : '';
+  }
+  if (r.kind === 'group') {
+    const { data } = await db.from('pulse_groups').select('name,tag,description,image_id,removed').eq('id', r.ref_id);
+    const g = data && data[0]; if (!g) return '';
+    const u = g.removed ? '' : await adminImage(g.image_id);
+    return `${u ? `<img class="rep-img small" src="${u}" alt="">` : ''}<div class="rep-text"><b>${esc(g.name)} [${esc(g.tag)}]</b>${g.removed ? ' <i>(removed)</i>' : ''}<br>${esc(g.description)}</div>`;
+  }
+  const u = users.find(x => x.pulse_id === r.target_pid) || {};
+  return `<div class="rep-text"><b>${esc(u.display_name || u.persona || '')}</b>${u.username ? ' @' + esc(u.username) : ''}<br>${esc(u.bio || '')}</div>`;
+}
+async function loadReports() {
+  let q = db.from('pulse_reports').select('*').order('created_at', { ascending: false }).limit(100);
+  if (repFilter === 'open') q = q.eq('status', 'open');
+  const { data, error } = await q;
+  if (error) { $('repList').innerHTML = `<div class="empty">${/pulse_reports/.test(error.message) ? 'Run supabase/006_community.sql in the Supabase SQL Editor first.' : esc(error.message)}</div>`; return; }
+  reports = data;
+  const open = data.filter(r => r.status === 'open').length;
+  $('repCount').hidden = !open; $('repCount').textContent = open;
+  if (!data.length) { $('repList').innerHTML = '<div class="empty">No reports. 🎉</div>'; return; }
+  const name = pid => { const u = users.find(x => x.pulse_id === pid); return u ? (u.display_name || u.persona || pid) : pid; };
+  const rows = await Promise.all(data.map(async r => `<div class="rep">
+      <div class="rep-prev">${await reportPreview(r)}</div>
+      <div class="rep-info"><b>${esc(r.kind)}</b> by <b>${esc(name(r.target_pid))}</b> <span class="mono">${esc(r.target_pid)}</span>
+        ${warnCount[r.target_pid] ? `<span class="chip ban">⚠ ${warnCount[r.target_pid]}</span>` : ''}
+        <div class="reason">Reported by ${esc(name(r.reporter))} · ${esc(ago(r.created_at))} · ${esc(r.reason)}</div>
+        ${r.status !== 'open' ? `<div class="reason">${esc(r.status)}</div>` : ''}</div>
+      ${r.status === 'open' ? `<div class="acts rep-acts">
+        ${r.kind !== 'profile' ? `<button class="btn small" data-rremove="${r.id}">Remove content</button>` : `<button class="btn small" data-rremove="${r.id}">Clear name + summary</button>`}
+        ${warnCount[r.target_pid] ? `<button class="btn small danger" data-rban="${r.id}">Remove + community ban</button>` : `<button class="btn small" data-rwarn="${r.id}">Remove + warn</button>`}
+        <button class="btn small" data-rdismiss="${r.id}">Dismiss</button></div>` : ''}
+    </div>`));
+  $('repList').innerHTML = rows.join('');
+}
+async function removeContent(r) {
+  const kind = r.kind === 'profile' ? 'profile_text' : r.kind;
+  const { error } = await db.rpc('pulse_admin_remove', { p_kind: kind, p_ref: r.ref_id || 0, p_report: r.id });
+  if (error) { alert('Could not remove: ' + error.message); return false; }
+  return true;
+}
+$('repList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-rremove],[data-rwarn],[data-rban],[data-rdismiss]'); if (!b) return;
+  const r = reports.find(x => String(x.id) === (b.dataset.rremove || b.dataset.rwarn || b.dataset.rban || b.dataset.rdismiss)); if (!r) return;
+  if (b.dataset.rdismiss) { await db.from('pulse_reports').update({ status: 'dismissed' }).eq('id', r.id); return load(); }
+  if (!await removeContent(r)) return;
+  if (b.dataset.rwarn) {
+    const reason = prompt('Warning shown to the player:', r.kind === 'comment' ? 'Offensive comment' : 'NSFW or inappropriate picture');
+    if (reason !== null) await db.rpc('pulse_admin_warn', { p_pulse_id: r.target_pid, p_reason: reason, p_report: r.id });
+  }
+  if (b.dataset.rban) {
+    const reason = prompt('Pulse Community ban reason:', 'Repeated rule breaking after a warning');
+    if (reason !== null) await db.rpc('pulse_admin_community_ban', { p_pulse_id: r.target_pid, p_on: true, p_reason: reason, p_report: r.id });
+  }
+  load();
+});
+$('repFilter').addEventListener('click', e => {
+  const b = e.target.closest('[data-rf]'); if (!b) return;
+  repFilter = b.dataset.rf; document.querySelectorAll('#repFilter button').forEach(x => x.classList.toggle('on', x === b)); loadReports();
+});
+async function warnUser(pid) {
+  const u = users.find(x => x.pulse_id === pid);
+  const reason = prompt(`Warn ${u?.display_name || u?.persona || pid}?\nMessage shown to the player:`, 'Please follow the Pulse rules');
+  if (reason === null) return;
+  const { error } = await db.rpc('pulse_admin_warn', { p_pulse_id: pid, p_reason: reason });
+  if (error) alert('Could not warn: ' + error.message + (error.code === 'PGRST202' ? '\n\nRun supabase/006_community.sql first.' : ''));
+  load();
+}
+async function communityBan(pid, on) {
+  const u = users.find(x => x.pulse_id === pid);
+  let reason = '';
+  if (on) { reason = prompt(`Pulse Community ban for ${u?.display_name || u?.persona || pid}?\nThey can still play, but can't comment, upload or edit their profile.\nReason:`, 'Repeated rule breaking'); if (reason === null) return; }
+  else if (!confirm('Lift the community ban? It stays on their record.')) return;
+  const { error } = await db.rpc('pulse_admin_community_ban', { p_pulse_id: pid, p_on: on, p_reason: reason });
+  if (error) alert('Could not save: ' + error.message);
+  load();
+}
+
+/* ---------- Market + Pulse Guard ---------- */
+async function guardReset(pid) {
+  const u = users.find(x => x.pulse_id === pid);
+  if (!confirm(`Turn Pulse Guard (2FA) off for ${u?.display_name || u?.persona || pid}?\nOnly do this if you're sure it's really them (lost phone).`)) return;
+  const { error } = await db.rpc('pulse_admin_guard_reset', { p_pulse_id: pid });
+  alert(error ? 'Could not reset: ' + error.message + (error.code === 'PGRST202' ? '\n\nRun supabase/007_market.sql first.' : '') : 'Done. They can set up Pulse Guard again in Settings → Security.');
+}
+let listings = [];
+async function loadMarketAdmin() {
+  const { data, error } = await db.from('pulse_listings').select('*').eq('status', 'active').order('created_at', { ascending: false }).limit(300);
+  if (error) { $('mkList').innerHTML = `<div class="empty">${/pulse_listings/.test(error.message) ? 'Run supabase/007_market.sql in the Supabase SQL Editor first.' : esc(error.message)}</div>`; return; }
+  listings = data;
+  const sales = await db.from('pulse_sales').select('price_cents,fee_cents').limit(10000);
+  const total = (sales.data || []).reduce((a, x) => a + x.price_cents, 0), fees = (sales.data || []).reduce((a, x) => a + x.fee_cents, 0);
+  $('mkStats').textContent = `${(sales.data || []).length} sales · €${(total / 100).toFixed(2)} traded · €${(fees / 100).toFixed(2)} fees`;
+  const itemIds = [...new Set(data.filter(l => l.kind !== 'game').map(l => l.ref_id))];
+  const its = itemIds.length ? (await db.from('pulse_items').select('id,name,kind,image_url,image_id').in('id', itemIds)).data || [] : [];
+  const gms = (await db.from('pulse_games').select('id,title,banner_url')).data || [];
+  const name = pid => { const u = users.find(x => x.pulse_id === pid); return u ? (u.display_name || u.persona || pid) : pid; };
+  const rows = await Promise.all(data.map(async l => {
+    const it = its.find(i => i.id === l.ref_id), g = gms.find(x => x.id === l.ref_id);
+    const img = l.kind === 'game' ? (g && g.banner_url) : it ? (it.image_url || await adminImage(it.image_id)) : '';
+    return `<div class="post"><div class="thumb" style="${img ? `background-image:url('${img}')` : ''}"></div>
+      <div><b>${esc(l.kind === 'game' ? (g ? g.title : 'Game') : (it ? it.name : 'Item'))}</b>
+        <div class="meta">${esc(l.kind === 'creator' ? 'Player-made ' + (it ? it.kind : '') : l.kind)} · €${(l.price_cents / 100).toFixed(2)}
+          ${l.kind === 'creator' ? ` · ${l.sold}/${l.quantity} sold` : ''} · seller ${esc(name(l.seller))} · ${esc(ago(l.created_at))}</div></div>
+      <div class="acts"><button class="btn small danger" data-lrm="${l.id}">Remove</button></div></div>`;
+  }));
+  $('mkList').innerHTML = rows.join('') || '<div class="empty">Nothing for sale right now.</div>';
+}
+$('mkList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-lrm]'); if (!b) return;
+  if (!confirm('Remove this listing? Items and games go back to the seller; a player-made item\'s picture is taken down.')) return;
+  const { error } = await db.rpc('pulse_admin_listing_remove', { p_listing: Number(b.dataset.lrm) });
+  if (error) alert(error.message); loadMarketAdmin();
+});
+
+/* ---------- Tabs ---------- */
+let tab = 'users';
+function showTab(t) {
+  tab = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  for (const id of ['points', 'games', 'news', 'users', 'themes']) $('tab-' + id).hidden = id !== t;
+  try { localStorage.setItem('pulse_admin_tab', t); } catch (e) {}
+  if (t === 'news') loadNews();
+  if (t === 'points') { renderPoints(); loadGames().then(() => { codeKindUI(); loadCodes(); }); }
+  if (t === 'games') loadGames();
+  if (t === 'themes') { loadItems(); loadMarketAdmin(); }
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+
+/* ---------- Points ---------- */
+function renderPoints() {
+  const q = $('pSearch').value.trim().toLowerCase();
+  const list = users.filter(u => !q || [u.persona, u.steamid, u.pulse_id].some(v => (v || '').toLowerCase().includes(q)));
+  $('pRows').innerHTML = list.map(u => `<tr>
+      <td><div class="user">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}<div><b>${esc(u.persona || 'Unknown')}</b></div></div></td>
+      <td class="mono">${esc(u.pulse_id)}</td>
+      <td><b class="coins">⚡ ${u.points_balance == null ? '—' : Number(u.points_balance).toLocaleString()}</b></td>
+      <td>${u.bonus_points ? `${u.bonus_points > 0 ? '+' : ''}${Number(u.bonus_points).toLocaleString()}${u.bonus_note ? ' · ' + esc(u.bonus_note) : ''}` : '<span class="reason">—</span>'}</td>
+      <td>€${(Number(u.balance_cents || 0) / 100).toFixed(2)}</td>
+      <td class="acts"><button class="btn small gift" data-gift="${esc(u.pulse_id)}">Give coins</button>
+        <button class="btn small" data-bal="${esc(u.pulse_id)}">Give balance</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="empty">No players.</td></tr>';
+}
+$('pSearch').addEventListener('input', renderPoints);
+$('pRows').addEventListener('click', e => {
+  const g = e.target.closest('[data-gift]'); if (g) { giveCoins(g.dataset.gift).then(renderPoints); return; }
+  const b = e.target.closest('[data-bal]'); if (b) giveBalance(b.dataset.bal).then(renderPoints);
+});
+
+/* ---------- Image uploads (bucket pulse-media, admins only) ---------- */
+const picked = {};          // slot -> File or existing URL
+async function uploadImage(file, folder) {
+  if (typeof file === 'string') return file;          // already uploaded
+  if (!file) return '';
+  if (file.size > 5 * 1024 * 1024) throw new Error('Images can be up to 5 MB.');
+  const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const up = await db.storage.from('pulse-media').upload(path, file, { contentType: file.type, upsert: false });
+  if (up.error) throw new Error('Image upload failed: ' + up.error.message);
+  return db.storage.from('pulse-media').getPublicUrl(path).data.publicUrl;
+}
+function setDrop(slot, value) {
+  picked[slot] = value || null;
+  document.querySelectorAll(`.drop[data-pick="${slot}"]`).forEach(d => {
+    const img = d.querySelector('img'), span = d.querySelector('span');
+    img.hidden = !value;
+    if (value) img.src = typeof value === 'string' ? value : URL.createObjectURL(value);
+    span.textContent = value ? 'Click to change the image' : 'Click to choose an image';
+  });
+}
+const filePicker = document.createElement('input');
+filePicker.type = 'file'; filePicker.accept = 'image/png,image/jpeg,image/webp,image/gif'; filePicker.hidden = true;
+document.body.appendChild(filePicker);
+let pickSlot = null;
+document.addEventListener('click', e => {
+  const d = e.target.closest('.drop[data-pick]'); if (!d) return;
+  pickSlot = d.dataset.pick; filePicker.value = ''; filePicker.click();
+});
+filePicker.addEventListener('change', () => { const f = filePicker.files[0]; if (f && pickSlot) setDrop(pickSlot, f); });
+const toLocalInput = iso => { if (!iso) return ''; const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
+const fromLocalInput = v => v ? new Date(v).toISOString() : null;
+function setMsg(id, text, err) { $(id).className = 'msg' + (err ? ' err' : ''); $(id).textContent = text; }
+
+/* ---------- Games ---------- */
+let games = [], gEditing = null, guGameId = null;
+function achRow(a = {}, i = 0) {
+  const slot = 'ach' + Math.random().toString(36).slice(2, 8);
+  const div = document.createElement('div');
+  div.className = 'ach-row';
+  div.dataset.slot = slot;
+  div.innerHTML = `<div class="drop mini" data-pick="${slot}"><img alt="" hidden><span>Icon</span></div>
+    <input type="text" class="a-name" maxlength="80" placeholder="Name" value="${esc(a.name || '')}">
+    <input type="text" class="a-desc" maxlength="200" placeholder="Description" value="${esc(a.desc || '')}">
+    <input type="number" class="a-min" min="0" placeholder="Minutes" title="Unlocked after this many minutes of play (0 = first launch)" value="${a.minutes ?? ''}">
+    <button class="btn small danger" type="button" data-rm>✕</button>`;
+  $('gAchs').appendChild(div);
+  if (a.icon_url) setDrop(slot, a.icon_url);
+}
+$('gAchAdd').addEventListener('click', () => achRow());
+$('gAchs').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) b.closest('.ach-row').remove(); });
+function clearGameForm() {
+  gEditing = null; $('gForm').reset(); $('gAchs').innerHTML = ''; setDrop('banner', null); setDrop('icon', null);
+  $('gFormTitle').textContent = 'Add a game'; $('gSubmit').textContent = 'Add game'; setMsg('gMsg', '');
+}
+$('gClear').addEventListener('click', clearGameForm);
+function gameRowHTML(g) {
+  const sale = g.discount_pct && (!g.discount_until || new Date(g.discount_until) > new Date());
+  return `<div class="post">
+    <div class="thumb" style="${g.banner_url ? `background-image:url('${esc(g.banner_url)}')` : ''}"></div>
+    <div><b>${esc(g.title)}</b><p>${esc(g.short_desc || g.description || '')}</p>
+      <div class="meta">⚡ ${Number(g.price_points).toLocaleString()}${sale ? ` · <span class="chip ok">-${g.discount_pct}%</span>` : ''}
+        · ${(g.achievements || []).length} achievements · ${g.published ? '<span class="chip ok">In store</span>' : '<span class="chip ban">Hidden</span>'}</div></div>
+    <div class="acts"><button class="btn small" data-gedit="${g.id}">Edit</button>
+      <button class="btn small" data-gupd="${g.id}">Updates</button>
+      <button class="btn small" data-gpub="${g.id}">${g.published ? 'Hide' : 'Show'}</button>
+      <button class="btn small danger" data-gdel="${g.id}">Delete</button></div></div>`;
+}
+async function loadGames() {
+  const { data, error } = await db.from('pulse_games').select('*').order('created_at', { ascending: false });
+  if (error) { $('gList').innerHTML = `<div class="empty">${/pulse_games/.test(error.message) ? 'Run supabase/005_store.sql in the Supabase SQL Editor first.' : esc(error.message)}</div>`; return; }
+  games = data;
+  $('gList').innerHTML = games.length ? games.map(gameRowHTML).join('') : '<div class="empty">No games yet. Add the first one.</div>';
+  $('cGame').innerHTML = '<option value="">Any Pulse Store game</option>' + games.map(g => `<option value="${g.id}">${esc(g.title)}</option>`).join('');
+}
+$('gForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  setMsg('gMsg', 'Saving…'); $('gSubmit').disabled = true;
+  try {
+    const achievements = [];
+    for (const row of document.querySelectorAll('#gAchs .ach-row')) {
+      const name = row.querySelector('.a-name').value.trim(); if (!name) continue;
+      achievements.push({ id: String(achievements.length + 1), name, desc: row.querySelector('.a-desc').value.trim(),
+                          minutes: Math.max(0, parseInt(row.querySelector('.a-min').value || '0', 10) || 0),
+                          icon_url: await uploadImage(picked[row.dataset.slot], 'achievements') });
+    }
+    const dl = $('gDl').value.trim();
+    if (dl && !dl.startsWith('https://')) throw new Error('The download link must start with https://');
+    const row = {
+      title: $('gTitle').value.trim(), developer: $('gDev').value.trim(), short_desc: $('gShort').value.trim(),
+      description: $('gDesc').value.trim(), price_points: Math.max(0, parseInt($('gPrice').value || '0', 10)),
+      discount_pct: Math.min(95, Math.max(0, parseInt($('gDisc').value || '0', 10))), discount_until: fromLocalInput($('gDiscUntil').value),
+      download_url: dl, achievements, published: $('gPub').checked,
+      banner_url: await uploadImage(picked.banner, 'games'), icon_url: await uploadImage(picked.icon, 'games'),
+    };
+    const res = gEditing ? await db.from('pulse_games').update(row).eq('id', gEditing) : await db.from('pulse_games').insert(row);
+    if (res.error) throw new Error(res.error.message);
+    clearGameForm(); setMsg('gMsg', 'Saved. Players see it within two minutes.');
+    await loadGames();
+  } catch (err) { setMsg('gMsg', err.message, true); }
+  finally { $('gSubmit').disabled = false; }
+});
+$('gList').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-gedit]'), up = e.target.closest('[data-gupd]'), pb = e.target.closest('[data-gpub]'), dl = e.target.closest('[data-gdel]');
+  const el = ed || up || pb || dl; if (!el) return;
+  const id = Number(el.dataset.gedit || el.dataset.gupd || el.dataset.gpub || el.dataset.gdel);
+  const g = games.find(x => x.id === id); if (!g) return;
+  if (ed) {
+    clearGameForm(); gEditing = g.id;
+    $('gTitle').value = g.title; $('gDev').value = g.developer; $('gShort').value = g.short_desc; $('gDesc').value = g.description;
+    $('gPrice').value = g.price_points; $('gDisc').value = g.discount_pct; $('gDiscUntil').value = toLocalInput(g.discount_until);
+    $('gDl').value = g.download_url; $('gPub').checked = g.published;
+    setDrop('banner', g.banner_url || null); setDrop('icon', g.icon_url || null);
+    (g.achievements || []).forEach(achRow);
+    $('gFormTitle').textContent = 'Edit ' + g.title; $('gSubmit').textContent = 'Save changes';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (up) {
+    guGameId = g.id; $('guGame').textContent = g.title; $('guForm').hidden = false; $('guForm').reset(); setDrop('update', null); setMsg('guMsg', '');
+    loadGameUpdates(); $('guForm').scrollIntoView({ behavior: 'smooth' });
+  } else if (pb) {
+    const { error } = await db.from('pulse_games').update({ published: !g.published }).eq('id', g.id);
+    if (error) alert(error.message); loadGames();
+  } else if (dl) {
+    if (!confirm(`Delete ${g.title}? Players who bought it lose it from their library. This can't be undone.`)) return;
+    const { error } = await db.from('pulse_games').delete().eq('id', g.id);
+    if (error) alert(error.message); loadGames();
+  }
+});
+async function loadGameUpdates() {
+  const { data, error } = await db.from('pulse_game_news').select('*').eq('game_id', guGameId).order('created_at', { ascending: false });
+  if (error) { $('guList').innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
+  $('guList').innerHTML = data.map(n => `<div class="post"><div class="thumb" style="${n.image_url ? `background-image:url('${esc(n.image_url)}')` : ''}"></div>
+    <div><b>${esc(n.title)}</b><p>${esc(n.body)}</p><div class="meta">${esc(n.kind)} · ${esc(new Date(n.created_at).toLocaleString())}</div></div>
+    <div class="acts"><button class="btn small danger" type="button" data-gudel="${n.id}">Delete</button></div></div>`).join('') || '<div class="empty">No updates yet.</div>';
+}
+$('guClose').addEventListener('click', () => { $('guForm').hidden = true; guGameId = null; });
+$('guList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-gudel]'); if (!b || !confirm('Delete this update?')) return;
+  const { error } = await db.from('pulse_game_news').delete().eq('id', Number(b.dataset.gudel));
+  if (error) alert(error.message); loadGameUpdates();
+});
+$('guForm').addEventListener('submit', async e => {
+  e.preventDefault(); setMsg('guMsg', 'Posting…');
+  try {
+    const row = { game_id: guGameId, title: $('guTitle').value.trim(), kind: $('guKind').value, body: $('guBody').value.trim(),
+                  image_url: await uploadImage(picked.update, 'updates') };
+    const { error } = await db.from('pulse_game_news').insert(row);
+    if (error) throw new Error(error.message);
+    $('guTitle').value = ''; $('guBody').value = ''; setDrop('update', null);
+    setMsg('guMsg', 'Posted. It shows on the game page and in Community.'); loadGameUpdates();
+  } catch (err) { setMsg('guMsg', err.message, true); }
+});
+
+/* ---------- Redeem codes ---------- */
+let codeWait = 0, codeTimer = null;
+function codeKindUI() {
+  const k = $('cKind').value;
+  $('cAmountWrap').hidden = k === 'game';
+  $('cGameWrap').hidden = !['game', 'discount'].includes(k);
+  $('cGame').querySelector('option[value=""]').hidden = k === 'game';
+  if (k === 'game' && !$('cGame').value && games[0]) $('cGame').value = games[0].id;
+  $('cAmountLabel').textContent = { coins: 'Pulse Points', discount: 'Discount %', balance: 'Balance in € (e.g. 5 or 2.50)' }[k] || '';
+  $('cAmount').step = k === 'balance' ? '0.01' : '1';
+}
+$('cKind').addEventListener('change', codeKindUI);
+function describeCode(c) {
+  const g = games.find(x => x.id === c.game_id);
+  return c.kind === 'coins' ? `⚡ ${Number(c.amount).toLocaleString()} points`
+    : c.kind === 'game' ? `Game: ${esc(g ? g.title : '#' + c.game_id)}`
+    : c.kind === 'discount' ? `-${c.amount}% ${g ? 'on ' + esc(g.title) : 'on any game'}`
+    : `€${(c.amount / 100).toFixed(2)} balance`;
+}
+async function loadCodes() {
+  const { data, error } = await db.from('pulse_codes').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) { $('cRows').innerHTML = `<tr><td colspan="5" class="empty">${/pulse_codes/.test(error.message) ? 'Run supabase/005_store.sql first.' : esc(error.message)}</td></tr>`; return; }
+  $('cRows').innerHTML = data.map(c => `<tr>
+      <td class="mono">${esc(c.code)}${c.note ? `<div class="reason">${esc(c.note)}</div>` : ''}</td>
+      <td>${describeCode(c)}</td><td>${c.uses} / ${c.max_uses}</td>
+      <td>${c.expires_at ? esc(new Date(c.expires_at).toLocaleString()) : '—'}</td>
+      <td>${c.disabled ? '<span class="chip ban">Off</span>' : `<button class="btn small" data-coff="${esc(c.code)}">Turn off</button>`}</td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty">No codes yet.</td></tr>';
+}
+function tickCodeWait() {
+  clearInterval(codeTimer);
+  const end = Date.now() + codeWait * 1000;
+  const step = () => {
+    const left = Math.ceil((end - Date.now()) / 1000);
+    if (left <= 0) { clearInterval(codeTimer); $('cSubmit').disabled = false; $('cSubmit').textContent = 'Generate code'; return; }
+    $('cSubmit').disabled = true; $('cSubmit').textContent = `Wait ${left}s`;
+  };
+  step(); codeTimer = setInterval(step, 250);
+}
+$('cForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const k = $('cKind').value;
+  let amount = parseFloat($('cAmount').value || '0');
+  if (k === 'balance') amount = Math.round(amount * 100);
+  const game = $('cGame').value ? Number($('cGame').value) : null;
+  setMsg('cMsg', 'Generating…'); $('cSubmit').disabled = true;
+  const { data, error } = await db.rpc('pulse_make_code', {
+    p_kind: k, p_amount: k === 'game' ? 0 : Math.round(amount), p_game: ['game', 'discount'].includes(k) ? game : null,
+    p_max_uses: parseInt($('cUses').value || '1', 10), p_expires: fromLocalInput($('cExp').value), p_note: $('cNote').value.trim() });
+  if (error) { setMsg('cMsg', error.message + (error.code === 'PGRST202' ? ' — run supabase/005_store.sql first.' : ''), true); $('cSubmit').disabled = false; return; }
+  if (data.result === 'wait') { setMsg('cMsg', `Wait ${data.seconds} seconds before the next code.`, true); codeWait = data.seconds; tickCodeWait(); return; }
+  setMsg('cMsg', 'New code — send it to the player:');
+  $('cNew').hidden = false; $('cNewCode').textContent = data.code;
+  codeWait = 30; tickCodeWait();
+  loadCodes();
+});
+$('cCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('cNewCode').textContent); $('cCopy').textContent = 'Copied'; setTimeout(() => $('cCopy').textContent = 'Copy', 1500); } catch (e) {} });
+$('cRows').addEventListener('click', async e => {
+  const b = e.target.closest('[data-coff]'); if (!b || !confirm(`Turn off ${b.dataset.coff}? Nobody can redeem it after this.`)) return;
+  const { error } = await db.from('pulse_codes').update({ disabled: true }).eq('code', b.dataset.coff);
+  if (error) alert(error.message); loadCodes();
+});
+async function giveBalance(pulseId) {
+  const u = users.find(x => x.pulse_id === pulseId);
+  const raw = prompt(`Give balance to ${u?.persona || pulseId} in € (minus to take away):`, '5');
+  if (raw === null) return;
+  const cents = Math.round(parseFloat(raw.replace(',', '.')) * 100);
+  if (!cents) { alert('Enter an amount, for example 5 or -2.50'); return; }
+  const note = prompt('Note (optional, only admins see it):', cents > 0 ? 'Gift' : 'Correction');
+  if (note === null) return;
+  const { error } = await db.rpc('pulse_give_balance', { p_pulse_id: pulseId, p_cents: cents, p_note: note });
+  if (error) { alert('Could not give balance: ' + error.message + (error.code === 'PGRST202' ? '\n\nRun supabase/005_store.sql first.' : '')); return; }
+  await load();
+}
+
+/* ---------- Themes & frames ---------- */
+let items = [];
+async function loadItems() {
+  const { data, error } = await db.from('pulse_items').select('*').order('created_at', { ascending: false });
+  if (error) { $('iList').innerHTML = `<div class="empty">${/pulse_items/.test(error.message) ? 'Run supabase/005_store.sql first.' : esc(error.message)}</div>`; return; }
+  items = data;
+  $('iList').innerHTML = items.map(i => `<div class="post">
+      <div class="thumb${i.kind === 'frame' ? ' frame' : ''}" style="background-image:url('${esc(i.image_url)}')"></div>
+      <div><b>${esc(i.name)}</b><p>${esc(i.description)}</p>
+        <div class="meta">${i.kind === 'frame' ? 'Avatar frame' : 'Profile background'} · ⚡ ${Number(i.price_points).toLocaleString()} · ${i.published ? '<span class="chip ok">In shop</span>' : '<span class="chip ban">Hidden</span>'}</div></div>
+      <div class="acts"><button class="btn small" data-ipub="${i.id}">${i.published ? 'Hide' : 'Show'}</button>
+        <button class="btn small danger" data-idel="${i.id}">Delete</button></div></div>`).join('')
+    || '<div class="empty">Nothing uploaded yet.</div>';
+}
+$('iForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!picked.item) { setMsg('iMsg', 'Choose an image first.', true); return; }
+  setMsg('iMsg', 'Uploading…');
+  try {
+    const row = { kind: $('iKind').value, name: $('iName').value.trim(), description: $('iDesc').value.trim(),
+                  price_points: Math.max(0, parseInt($('iPrice').value || '0', 10)), image_url: await uploadImage(picked.item, 'cosmetics') };
+    const { error } = await db.from('pulse_items').insert(row);
+    if (error) throw new Error(error.message);
+    $('iForm').reset(); setDrop('item', null); setMsg('iMsg', 'Added to the Points Shop.'); loadItems();
+  } catch (err) { setMsg('iMsg', err.message, true); }
+});
+$('iList').addEventListener('click', async e => {
+  const pb = e.target.closest('[data-ipub]'), dl = e.target.closest('[data-idel]');
+  const el = pb || dl; if (!el) return;
+  const i = items.find(x => x.id === Number(el.dataset.ipub || el.dataset.idel)); if (!i) return;
+  if (pb) { const { error } = await db.from('pulse_items').update({ published: !i.published }).eq('id', i.id); if (error) alert(error.message); }
+  else { if (!confirm(`Delete ${i.name}? Players who bought it lose it.`)) return; const { error } = await db.from('pulse_items').delete().eq('id', i.id); if (error) alert(error.message); }
+  loadItems();
+});
+
+/* ---------- News ---------- */
+let news = [], editing = null, newsFile = null, keepImage = '';
+function postHTML(n) {
+  return `<div class="post">
+    <div class="thumb" style="${n.image_url ? `background-image:url('${esc(n.image_url)}')` : ''}"></div>
+    <div><b>${esc(n.title)}</b><p>${esc(n.body)}</p>
+      <div class="meta">${esc(n.kind)} · ${esc(new Date(n.created_at).toLocaleString())}${n.author ? ' · ' + esc(n.author) : ''} · ${n.published ? '<span class="chip ok">Published</span>' : '<span class="chip ban">Hidden</span>'}</div></div>
+    <div class="acts"><button class="btn small" data-edit="${n.id}">Edit</button>
+      <button class="btn small" data-pub="${n.id}">${n.published ? 'Hide' : 'Publish'}</button>
+      <button class="btn small danger" data-del="${n.id}">Delete</button></div></div>`;
+}
+async function loadNews() {
+  const { data, error } = await db.from('pulse_news').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) {
+    $('newsList').innerHTML = `<div class="empty">${error.code === '42P01' || /pulse_news/.test(error.message)
+      ? 'Run supabase/004_news.sql in the Supabase SQL Editor first.' : 'Could not load: ' + esc(error.message)}</div>`;
+    return;
+  }
+  news = data;
+  $('newsList').innerHTML = news.length ? news.map(postHTML).join('') : '<div class="empty">No posts yet. Write the first one.</div>';
+}
+function setImage(url, file) {
+  newsFile = file || null; keepImage = file ? '' : (url || '');
+  const show = !!(url || file);
+  $('nPreview').hidden = !show; $('nNoImg').hidden = !show;
+  $('nDropText').textContent = show ? 'Click to change the image' : 'Click to choose a PNG, JPG, WEBP or GIF';
+  if (file) $('nPreview').src = URL.createObjectURL(file); else if (url) $('nPreview').src = url;
+}
+function clearForm() {
+  editing = null; $('newsForm').reset(); setImage('', null);
+  $('newsFormTitle').textContent = 'New post'; $('nSubmit').textContent = 'Publish'; $('nMsg').textContent = '';
+}
+$('nDrop').addEventListener('click', () => $('nFile').click());
+$('nFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 5 * 1024 * 1024) { $('nMsg').className = 'msg err'; $('nMsg').textContent = 'That image is bigger than 5 MB.'; return; }
+  setImage('', f);
+});
+$('nNoImg').addEventListener('click', () => setImage('', null));
+$('nClear').addEventListener('click', clearForm);
+$('newsForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const msg = $('nMsg'); msg.className = 'msg'; msg.textContent = 'Saving…';
+  $('nSubmit').disabled = true;
+  try {
+    let image_url = keepImage;
+    if (newsFile) {
+      const ext = (newsFile.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const path = `news/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await db.storage.from('pulse-media').upload(path, newsFile, { contentType: newsFile.type, upsert: false });
+      if (up.error) throw new Error('Image upload failed: ' + up.error.message + ' (did you run 004_news.sql?)');
+      image_url = db.storage.from('pulse-media').getPublicUrl(path).data.publicUrl;
+    }
+    const row = { title: $('nTitle').value.trim(), body: $('nBody').value.trim(), kind: $('nKind').value, image_url };
+    const who = (await db.auth.getUser()).data.user;
+    const res = editing ? await db.from('pulse_news').update(row).eq('id', editing)
+                        : await db.from('pulse_news').insert({ ...row, published: true, author: who ? who.email.split('@')[0] : '' });
+    if (res.error) throw new Error(res.error.message);
+    clearForm();
+    msg.textContent = 'Saved. Players see it within a few minutes.';
+    await loadNews();
+  } catch (err) {
+    msg.className = 'msg err'; msg.textContent = err.message;
+  } finally { $('nSubmit').disabled = false; }
+});
+$('newsList').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-edit]'), pb = e.target.closest('[data-pub]'), dl = e.target.closest('[data-del]');
+  if (ed) {
+    const n = news.find(x => String(x.id) === ed.dataset.edit); if (!n) return;
+    editing = n.id; $('nTitle').value = n.title; $('nBody').value = n.body; $('nKind').value = n.kind; setImage(n.image_url, null);
+    $('newsFormTitle').textContent = 'Edit post'; $('nSubmit').textContent = 'Save changes'; $('nMsg').textContent = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (pb) {
+    const n = news.find(x => String(x.id) === pb.dataset.pub); if (!n) return;
+    const { error } = await db.from('pulse_news').update({ published: !n.published }).eq('id', n.id);
+    if (error) alert('Could not save: ' + error.message); await loadNews();
+  } else if (dl) {
+    const n = news.find(x => String(x.id) === dl.dataset.del); if (!n) return;
+    if (!confirm(`Delete "${n.title}"? This can't be undone.`)) return;
+    const { error } = await db.from('pulse_news').delete().eq('id', n.id);
+    if (error) alert('Could not delete: ' + error.message); await loadNews();
+  }
+});
+let pendingTab = 'users';
+try { const t = localStorage.getItem('pulse_admin_tab'); if (t && $('tab-' + t)) pendingTab = t; } catch (e) {}
+
 start();
 </script>
 </body>
