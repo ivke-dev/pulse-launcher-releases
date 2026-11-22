@@ -184,12 +184,15 @@ async function showApp(session) {
   $('loginView').hidden = true;
   $('who').hidden = false;
   $('whoEmail').textContent = session.user.email;
-  const { data } = await db.from('pulse_admins').select('email');
-  if (!data || !data.length) {
+  const { data, error } = await db.from('pulse_admins').select('email');
+  if (error || !data || !data.length) {
     $('appView').hidden = true;
     $('loginView').hidden = false;
     $('loginMsg').className = 'msg err';
-    $('loginMsg').textContent = 'This account is not a Pulse admin.';
+    // Say which of the two setup steps is missing
+    $('loginMsg').textContent = error
+      ? `The database doesn't allow admins to read yet (${error.code || ''} ${error.message}). Run the "grant" lines from setup.sql in the Supabase SQL Editor.`
+      : `${session.user.email} is not in the Pulse admin list. Add this exact email to pulse_admins in the Supabase SQL Editor.`;
     return;
   }
   $('appView').hidden = false;
