@@ -112,6 +112,13 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .rep-text { font-size: 13px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: hidden; }
 .rep-info { font-size: 13px; }
 .rep-acts { display: flex; flex-direction: column; gap: 6px; }
+.lvl { --c: #9b9b9b; position: relative; display: inline-grid; place-items: center; width: 32px; height: 32px; font-size: 14px; color: #fff; vertical-align: middle; }
+.lvl svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; } .lvl svg * { fill: none; stroke: var(--c); stroke-width: 2.4; }
+.lvl b { position: relative; font-weight: 500; } .lvl.hex { font-size: 12px; }
+.lvl.c0 { --c: #9b9b9b; } .lvl.c1 { --c: #c02942; } .lvl.c2 { --c: #d95b43; } .lvl.c3 { --c: #fecc23; } .lvl.c4 { --c: #467a3c; }
+.lvl.c5 { --c: #4e8ddb; } .lvl.c6 { --c: #7652c9; } .lvl.c7 { --c: #c252c9; } .lvl.c8 { --c: #542437; } .lvl.c9 { --c: #997c52; }
+.bicons { display: flex; gap: 4px; flex-wrap: wrap; } .bicons img { width: 26px; height: 26px; object-fit: contain; }
+.post .thumb.badge { background-size: contain; background-repeat: no-repeat; background-position: center; width: 70px; aspect-ratio: 1; }
 .soon-box b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
 </style>
 </head>
@@ -142,6 +149,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
       <button data-tab="news">News</button>
       <button class="on" data-tab="users">Users</button>
       <button data-tab="themes">Themes</button>
+      <button data-tab="levels">Levels</button>
     </nav>
 
     <!-- Points: give coins, redeem codes -->
@@ -282,6 +290,28 @@ tr:hover td { background: rgba(255,255,255,.015); }
       <div class="card" style="margin-top:18px">
         <div class="bar" style="margin-bottom:6px"><h3 style="font-family:'Space Grotesk',sans-serif">Community Market</h3><span class="right" id="mkStats"></span></div>
         <div id="mkList"><div class="empty">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- Levels + badges -->
+    <section id="tab-levels" hidden>
+      <div class="grid2">
+        <form class="card form" id="bForm">
+          <h3>Make a badge</h3>
+          <label for="bName">Name</label><input type="text" id="bName" maxlength="60" required placeholder="Early Supporter">
+          <label for="bDesc">Description</label><input type="text" id="bDesc" maxlength="200" placeholder="Played Pulse in its first month">
+          <label for="bXp">XP it gives</label><input type="number" id="bXp" min="0" max="1000000" value="100">
+          <label>Icon (square PNG)</label>
+          <div class="drop" data-pick="badge"><img alt="" hidden><span>Click to choose an image</span></div>
+          <div class="row-actions"><button class="btn primary" type="submit">Create badge</button></div>
+          <div class="msg" id="bMsg"></div>
+          <p class="reason" style="margin-top:12px">Every 500 XP is one level. A player's XP = badges they have + XP you give.</p>
+        </form>
+        <div class="card"><h3>Badges</h3><div id="bList"><div class="empty">Loading…</div></div></div>
+      </div>
+      <div class="bar" style="margin-top:22px"><input class="search" id="lSearch" placeholder="Search name, Steam ID or Pulse ID" autocomplete="off"></div>
+      <div class="card table-wrap" style="padding:6px 8px">
+        <table><thead><tr><th>Player</th><th>Level</th><th>XP</th><th>Badges</th><th></th></tr></thead><tbody id="lRows"></tbody></table>
       </div>
     </section>
 
@@ -612,17 +642,88 @@ $('mkList').addEventListener('click', async e => {
   if (error) alert(error.message); loadMarketAdmin();
 });
 
+/* ---------- Levels + badges ---------- */
+let badges = [], userBadges = [];
+function levelHTML(n) {
+  n = Math.max(0, Math.floor(n || 0)); const hex = n >= 100, c = Math.floor(n / 10) % 10;
+  return `<span class="lvl c${c}${hex ? ' hex' : ''}"><svg viewBox="0 0 100 100">${hex ? '<polygon points="50,3 93,27 93,73 50,97 7,73 7,27"/>' : '<circle cx="50" cy="50" r="46"/>'}</svg><b>${n}</b></span>`;
+}
+const userXp = u => Math.max(0, (u.xp_bonus || 0) + userBadges.filter(x => x.pulse_id === u.pulse_id).reduce((a, x) => a + ((badges.find(b => b.id === x.badge_id) || {}).xp || 0), 0));
+async function loadLevels() {
+  const r1 = await db.from('pulse_badges').select('*').order('created_at', { ascending: false });
+  if (r1.error) { $('bList').innerHTML = `<div class="empty">${/pulse_badges/.test(r1.error.message) ? 'Run supabase/009_levels.sql in the Supabase SQL Editor first.' : esc(r1.error.message)}</div>`; return; }
+  badges = r1.data;
+  userBadges = (await db.from('pulse_user_badges').select('*').limit(20000)).data || [];
+  $('bList').innerHTML = badges.map(b => `<div class="post"><div class="thumb badge" style="${b.icon_url ? `background-image:url('${esc(b.icon_url)}')` : ''}"></div>
+      <div><b>${esc(b.name)}</b><p>${esc(b.description)}</p><div class="meta">${b.xp.toLocaleString()} XP · ${userBadges.filter(x => x.badge_id === b.id).length} players</div></div>
+      <div class="acts"><button class="btn small danger" data-bdel="${b.id}">Delete</button></div></div>`).join('') || '<div class="empty">No badges yet.</div>';
+  renderLevelRows();
+}
+function renderLevelRows() {
+  const q = $('lSearch').value.trim().toLowerCase();
+  const list = users.filter(u => !q || [u.persona, u.display_name, u.steamid, u.pulse_id].some(v => (v || '').toLowerCase().includes(q)));
+  $('lRows').innerHTML = list.map(u => {
+    const xp = userXp(u), mine = userBadges.filter(x => x.pulse_id === u.pulse_id).map(x => badges.find(b => b.id === x.badge_id)).filter(Boolean);
+    return `<tr><td><div class="user">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}<div><b>${esc(u.display_name || u.persona || 'Unknown')}</b><span class="reason mono">${esc(u.pulse_id)}</span></div></div></td>
+      <td>${levelHTML(xp / 500)}</td><td>${xp.toLocaleString()} <span class="reason">(${(500 - xp % 500)} to next)</span></td>
+      <td><div class="bicons">${mine.map(b => b.icon_url ? `<img src="${esc(b.icon_url)}" title="${esc(b.name)}" alt="">` : `<span class="chip ok">${esc(b.name)}</span>`).join('')}</div></td>
+      <td class="acts"><button class="btn small" data-setlvl="${esc(u.pulse_id)}">Set level</button>
+        <button class="btn small gift" data-givexp="${esc(u.pulse_id)}">Give XP</button>
+        <button class="btn small" data-badgeto="${esc(u.pulse_id)}">Badges</button></td></tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty">No players.</td></tr>';
+}
+$('lSearch').addEventListener('input', renderLevelRows);
+$('bForm').addEventListener('submit', async e => {
+  e.preventDefault(); setMsg('bMsg', 'Saving…');
+  try {
+    const row = { name: $('bName').value.trim(), description: $('bDesc').value.trim(), xp: Math.max(0, parseInt($('bXp').value || '0', 10)),
+                  icon_url: await uploadImage(picked.badge, 'badges') };
+    const { error } = await db.from('pulse_badges').insert(row);
+    if (error) throw new Error(error.message);
+    $('bForm').reset(); setDrop('badge', null); setMsg('bMsg', 'Badge created. Give it to players below with “Badges”.'); loadLevels();
+  } catch (err) { setMsg('bMsg', err.message, true); }
+});
+$('bList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-bdel]'); if (!b) return;
+  const bd = badges.find(x => String(x.id) === b.dataset.bdel);
+  if (!confirm(`Delete the badge "${bd.name}"? Players lose it and its XP.`)) return;
+  const { error } = await db.from('pulse_badges').delete().eq('id', bd.id); if (error) alert(error.message); loadLevels();
+});
+$('lRows').addEventListener('click', async e => {
+  const t = e.target, sl = t.closest('[data-setlvl]'), gx = t.closest('[data-givexp]'), bt = t.closest('[data-badgeto]');
+  const pid = (sl || gx || bt || {}).dataset; if (!pid) return;
+  const id = pid.setlvl || pid.givexp || pid.badgeto, u = users.find(x => x.pulse_id === id), who = u ? (u.display_name || u.persona || id) : id;
+  let res;
+  if (sl) {
+    const v = prompt(`Set the level of ${who} (every level = 500 XP):`, Math.floor(userXp(u) / 500)); if (v === null) return;
+    res = await db.rpc('pulse_admin_set_level', { p_pulse_id: id, p_level: parseInt(v, 10) });
+  } else if (gx) {
+    const v = prompt(`Give XP to ${who} (use a minus to take XP away):`, '500'); if (v === null) return;
+    res = await db.rpc('pulse_admin_give_xp', { p_pulse_id: id, p_xp: parseInt(v, 10) });
+  } else {
+    if (!badges.length) return alert('Make a badge first.');
+    const has = userBadges.filter(x => x.pulse_id === id).map(x => x.badge_id);
+    const lines = badges.map((b, i) => `${i + 1}. ${has.includes(b.id) ? '✓ ' : ''}${b.name} (${b.xp} XP)`).join('\n');
+    const v = prompt(`Badges of ${who}:\n${lines}\n\nType a number to give it (or take it away if it has ✓):`, ''); if (!v) return;
+    const b = badges[parseInt(v, 10) - 1]; if (!b) return alert('No badge with that number.');
+    res = await db.rpc('pulse_admin_badge', { p_pulse_id: id, p_badge: b.id, p_on: !has.includes(b.id) });
+  }
+  if (res.error) alert('Could not save: ' + res.error.message + (res.error.code === 'PGRST202' ? '\n\nRun supabase/009_levels.sql first.' : ''));
+  await load(); loadLevels();
+});
+
 /* ---------- Tabs ---------- */
 let tab = 'users';
 function showTab(t) {
   tab = t;
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
-  for (const id of ['points', 'games', 'news', 'users', 'themes']) $('tab-' + id).hidden = id !== t;
+  for (const id of ['points', 'games', 'news', 'users', 'themes', 'levels']) $('tab-' + id).hidden = id !== t;
   try { localStorage.setItem('pulse_admin_tab', t); } catch (e) {}
   if (t === 'news') loadNews();
   if (t === 'points') { renderPoints(); loadGames().then(() => { codeKindUI(); loadCodes(); }); }
   if (t === 'games') loadGames();
   if (t === 'themes') { loadItems(); loadMarketAdmin(); }
+  if (t === 'levels') loadLevels();
 }
 $('tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
 
