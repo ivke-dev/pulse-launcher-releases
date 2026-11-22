@@ -119,7 +119,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
 // Public project values (same as in the launcher). Never put the service_role key here.
 const SUPABASE_URL = "https://wwleerpfltuscbivtgiv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ME68xRKyqGOwg98DwIQN3g_dZQ6u3BE";
-const ACTIVE_MINUTES = 35;   // Pulse checks in every 30 minutes
+const ACTIVE_MINUTES = 2;    // Pulse checks in every 30 seconds
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
