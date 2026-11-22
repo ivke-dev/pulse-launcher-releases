@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Pulse Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='92' height='92' rx='26' fill='url(%23g)'/%3E%3Cpolyline points='16,54 33,54 40,40 48,70 57,24 64,54 84,54' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --bg: #0a0c11; --panel: #10131a; --raise: #161a23; --raise-2: #1c2130; --line: #222838;
+  --text: #e9ecf3; --muted: #8a91a5; --faint: #5b6276; --violet: #7c5cff; --cyan: #22d3ee;
+  --grad: linear-gradient(135deg, var(--violet), var(--cyan)); --ok: #34d399; --err: #f87171;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { font-family: Inter, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh;
+  background-image: radial-gradient(ellipse 60% 40% at 20% 0%, rgba(124,92,255,.16), transparent 70%); }
+button, input { font: inherit; color: inherit; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; }
+header { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
+header svg { width: 40px; height: 40px; }
+header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; }
+header h1 small { font-family: Inter, sans-serif; font-size: 12px; letter-spacing: .2em; color: var(--muted); margin-left: 8px; }
+header .who { margin-left: auto; font-size: 13px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
+.btn { padding: 9px 16px; border-radius: 10px; cursor: pointer; background: var(--raise); border: 1px solid var(--line); font-size: 13px; }
+.btn:hover { border-color: #343b50; }
+.btn.primary { background: var(--grad); border: none; color: #fff; font-weight: 600; }
+.btn.danger { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.5); color: #fca5a5; }
+.btn.small { padding: 6px 12px; font-size: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+.login { max-width: 380px; margin: 10vh auto 0; }
+.login h2 { font-family: 'Space Grotesk', sans-serif; margin-bottom: 6px; }
+.login p { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+.login label { display: block; font-size: 13px; margin: 12px 0 6px; }
+.login input, .search { width: 100%; padding: 11px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
+.login input:focus, .search:focus { outline: none; border-color: var(--violet); }
+.login .btn { width: 100%; margin-top: 18px; padding: 11px; }
+.msg { font-size: 13px; margin-top: 12px; min-height: 18px; color: var(--muted); }
+.msg.err { color: var(--err); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.tile .l { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+.tile .v { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; }
+.bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+.bar .search { max-width: 360px; }
+.filters { display: flex; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; }
+.filters button { background: none; border: none; padding: 6px 12px; border-radius: 7px; color: var(--muted); cursor: pointer; font-size: 13px; }
+.filters button.on { background: var(--raise-2); color: var(--text); }
+.bar .right { margin-left: auto; font-size: 12px; color: var(--faint); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 13px; vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,.015); }
+.user { display: flex; align-items: center; gap: 10px; }
+.user img, .user .ph { width: 34px; height: 34px; border-radius: 8px; background: var(--raise-2); object-fit: cover; flex: none; }
+.user b { font-weight: 500; display: block; }
+.user a { color: var(--muted); font-size: 12px; text-decoration: none; }
+.user a:hover { color: var(--cyan); }
+.mono { font-family: Consolas, monospace; font-size: 12px; color: var(--muted); user-select: all; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--faint); margin-right: 6px; }
+.dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.chip { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.chip.ok { background: rgba(52,211,153,.12); color: var(--ok); }
+.chip.ban { background: rgba(248,113,113,.14); color: #fca5a5; }
+.reason { font-size: 12px; color: var(--muted); margin-top: 3px; max-width: 220px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+.table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><rect x="4" y="4" width="92" height="92" rx="26" fill="url(#g)"/><polyline points="16,54 33,54 40,40 48,70 57,24 64,54 84,54" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>Pulse <small>ADMIN</small></h1>
+    <div class="who" id="who" hidden><span id="whoEmail"></span><button class="btn small" id="signOut">Sign out</button></div>
+  </header>
+
+  <!-- Sign in -->
+  <div class="card login" id="loginView">
+    <h2>Sign in</h2>
+    <p>Only Pulse admins can see the user list.</p>
+    <form id="loginForm">
+      <label for="email">Email</label><input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <!-- Users -->
+  <div id="appView" hidden>
+    <div class="tiles">
+      <div class="card tile"><div class="l">Users</div><div class="v" id="tTotal">0</div></div>
+      <div class="card tile"><div class="l">Active now</div><div class="v" id="tOnline">0</div></div>
+      <div class="card tile"><div class="l">Seen today</div><div class="v" id="tToday">0</div></div>
+      <div class="card tile"><div class="l">Banned</div><div class="v" id="tBanned">0</div></div>
+    </div>
+    <div class="bar">
+      <input class="search" id="search" placeholder="Search name, Steam ID or Pulse ID" autocomplete="off">
+      <div class="filters" id="filters">
+        <button class="on" data-f="all">All</button><button data-f="online">Active now</button><button data-f="banned">Banned</button>
+      </div>
+      <button class="btn small" id="refresh">Refresh</button>
+      <span class="right" id="updated"></span>
+    </div>
+    <div class="card table-wrap" style="padding:6px 8px">
+      <table>
+        <thead><tr><th>Player</th><th>Pulse ID</th><th>Version</th><th>Last seen</th><th>First seen</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>No players yet.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Public project values (same as in the launcher). Never put the service_role key here.
+const SUPABASE_URL = "https://wwleerpfltuscbivtgiv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ME68xRKyqGOwg98DwIQN3g_dZQ6u3BE";
+const ACTIVE_MINUTES = 35;   // Pulse checks in every 30 minutes
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let db = null, users = [], filter = 'all';
+
+function ago(iso) {
+  const s = Math.max(0, (Date.now() - new Date(iso)) / 1000);
+  if (s < 90) return 'just now';
+  if (s < 3600) return Math.round(s / 60) + ' min ago';
+  if (s < 86400) return Math.round(s / 3600) + ' h ago';
+  return Math.round(s / 86400) + ' days ago';
+}
+const isActive = u => (Date.now() - new Date(u.last_seen)) / 60000 < ACTIVE_MINUTES;
+
+function render() {
+  const q = $('search').value.trim().toLowerCase();
+  const list = users.filter(u => (filter === 'all' || (filter === 'banned' ? u.banned : isActive(u)))
+    && (!q || [u.persona, u.steamid, u.pulse_id].some(v => (v || '').toLowerCase().includes(q))));
+  $('rows').innerHTML = list.map(u => `
+    <tr>
+      <td><div class="user">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}
+        <div><b>${esc(u.persona || 'Unknown')}</b>${u.steamid ? `<a href="https://steamcommunity.com/profiles/${esc(u.steamid)}" target="_blank" rel="noopener">${esc(u.steamid)}</a>` : '<span class="reason">No Steam account</span>'}</div></div></td>
+      <td class="mono">${esc(u.pulse_id)}</td>
+      <td>${esc(u.version)}</td>
+      <td><span class="dot${isActive(u) ? ' on' : ''}"></span>${esc(ago(u.last_seen))}</td>
+      <td>${esc(new Date(u.first_seen).toLocaleDateString())}</td>
+      <td>${u.banned ? `<span class="chip ban">Banned</span><div class="reason">${esc(u.ban_reason)}</div>` : '<span class="chip ok">OK</span>'}</td>
+      <td>${u.banned ? `<button class="btn small" data-unban="${esc(u.pulse_id)}">Unban</button>`
+                     : `<button class="btn small danger" data-ban="${esc(u.pulse_id)}">Ban</button>`}</td>
+    </tr>`).join('');
+  $('empty').hidden = list.length > 0;
+  $('tTotal').textContent = users.length;
+  $('tOnline').textContent = users.filter(isActive).length;
+  $('tToday').textContent = users.filter(u => new Date(u.last_seen).toDateString() === new Date().toDateString()).length;
+  $('tBanned').textContent = users.filter(u => u.banned).length;
+}
+
+async function load() {
+  const { data, error } = await db.from('pulse_users').select('*').order('last_seen', { ascending: false }).limit(2000);
+  if (error) { $('updated').textContent = 'Could not load: ' + error.message; return; }
+  users = data;
+  $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  render();
+}
+
+async function setBan(pulseId, banned) {
+  const u = users.find(x => x.pulse_id === pulseId);
+  let reason = '';
+  if (banned) {
+    reason = prompt(`Ban ${u?.persona || pulseId}?\nReason (shown to the player):`, 'Breaking the rules');
+    if (reason === null) return;
+  }
+  // A ban also covers the same Steam account on other PCs (the check-in looks at both)
+  const { error } = await db.from('pulse_users')
+    .update({ banned, ban_reason: banned ? reason.slice(0, 300) : '', banned_at: banned ? new Date().toISOString() : null })
+    .eq('pulse_id', pulseId);
+  if (error) alert('Could not save: ' + error.message);
+  await load();
+}
+
+async function showApp(session) {
+  $('loginView').hidden = true;
+  $('who').hidden = false;
+  $('whoEmail').textContent = session.user.email;
+  const { data } = await db.from('pulse_admins').select('email');
+  if (!data || !data.length) {
+    $('appView').hidden = true;
+    $('loginView').hidden = false;
+    $('loginMsg').className = 'msg err';
+    $('loginMsg').textContent = 'This account is not a Pulse admin.';
+    return;
+  }
+  $('appView').hidden = false;
+  await load();
+}
+
+async function start() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    $('loginMsg').className = 'msg err';
+    $('loginMsg').textContent = 'The admin page is not connected to the Pulse server yet.';
+    return;
+  }
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data } = await db.auth.getSession();
+  if (data.session) showApp(data.session);
+  setInterval(() => { if (!$('appView').hidden) load(); }, 30000);
+}
+
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('loginMsg').className = 'msg'; $('loginMsg').textContent = 'Signing in…';
+  const { data, error } = await db.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  if (error) { $('loginMsg').className = 'msg err'; $('loginMsg').textContent = error.message; return; }
+  $('loginMsg').textContent = '';
+  showApp(data.session);
+});
+$('signOut').addEventListener('click', async () => { await db.auth.signOut(); location.reload(); });
+$('search').addEventListener('input', render);
+$('refresh').addEventListener('click', load);
+$('filters').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#filters button').forEach(x => x.classList.toggle('on', x === b));
+  filter = b.dataset.f; render();
+});
+$('rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-ban],[data-unban]'); if (!b) return;
+  setBan(b.dataset.ban || b.dataset.unban, !!b.dataset.ban);
+});
+start();
+</script>
+</body>
+</html>
