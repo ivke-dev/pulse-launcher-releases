@@ -66,6 +66,10 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .chip.ban { background: rgba(248,113,113,.14); color: #fca5a5; }
 .reason { font-size: 12px; color: var(--muted); margin-top: 3px; max-width: 220px; }
 .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+.coins { font-weight: 600; white-space: nowrap; }
+.acts { white-space: nowrap; }
+.acts .btn + .btn { margin-left: 6px; }
+.btn.gift { background: rgba(124,92,255,.14); border-color: rgba(124,92,255,.5); color: #c4b5fd; }
 .table-wrap { overflow-x: auto; }
 </style>
 </head>
@@ -107,7 +111,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
     </div>
     <div class="card table-wrap" style="padding:6px 8px">
       <table>
-        <thead><tr><th>Player</th><th>Pulse ID</th><th>Version</th><th>Last seen</th><th>First seen</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Player</th><th>Pulse ID</th><th>Version</th><th>Coins</th><th>Last seen</th><th>First seen</th><th>Status</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div class="empty" id="empty" hidden>No players yet.</div>
@@ -144,11 +148,14 @@ function render() {
         <div><b>${esc(u.persona || 'Unknown')}</b>${u.steamid ? `<a href="https://steamcommunity.com/profiles/${esc(u.steamid)}" target="_blank" rel="noopener">${esc(u.steamid)}</a>` : '<span class="reason">No Steam account</span>'}</div></div></td>
       <td class="mono">${esc(u.pulse_id)}</td>
       <td>${esc(u.version)}</td>
+      <td><b class="coins">⚡ ${u.points_balance == null ? '—' : Number(u.points_balance).toLocaleString()}</b>
+        ${u.bonus_points ? `<div class="reason">${u.bonus_points > 0 ? '+' : ''}${Number(u.bonus_points).toLocaleString()} given${u.bonus_note ? ' · ' + esc(u.bonus_note) : ''}</div>` : ''}</td>
       <td><span class="dot${isActive(u) ? ' on' : ''}"></span>${esc(ago(u.last_seen))}</td>
       <td>${esc(new Date(u.first_seen).toLocaleDateString())}</td>
       <td>${u.banned ? `<span class="chip ban">Banned</span><div class="reason">${esc(u.ban_reason)}</div>` : '<span class="chip ok">OK</span>'}</td>
-      <td>${u.banned ? `<button class="btn small" data-unban="${esc(u.pulse_id)}">Unban</button>`
-                     : `<button class="btn small danger" data-ban="${esc(u.pulse_id)}">Ban</button>`}</td>
+      <td class="acts"><button class="btn small gift" data-gift="${esc(u.pulse_id)}">Give coins</button>
+        ${u.banned ? `<button class="btn small" data-unban="${esc(u.pulse_id)}">Unban</button>`
+                   : `<button class="btn small danger" data-ban="${esc(u.pulse_id)}">Ban</button>`}</td>
     </tr>`).join('');
   $('empty').hidden = list.length > 0;
   $('tTotal').textContent = users.length;
@@ -227,7 +234,23 @@ $('filters').addEventListener('click', e => {
   document.querySelectorAll('#filters button').forEach(x => x.classList.toggle('on', x === b));
   filter = b.dataset.f; render();
 });
+async function giveCoins(pulseId) {
+  const u = users.find(x => x.pulse_id === pulseId);
+  const raw = prompt(`Give Pulse Points to ${u?.persona || pulseId}.
+Amount (use a minus sign to take coins away):`, '500');
+  if (raw === null) return;
+  const amount = parseInt(raw.replace(/[^0-9-]/g, ''), 10);
+  if (!amount) { alert('Enter a number, for example 500 or -200.'); return; }
+  const note = prompt('Note (optional, only admins see it):', amount > 0 ? 'Gift' : 'Correction');
+  if (note === null) return;
+  const { error } = await db.rpc('pulse_give_points', { p_pulse_id: pulseId, p_amount: amount, p_note: note });
+  if (error) { alert('Could not give coins: ' + error.message + (error.code === 'PGRST202' ? '\n\nRun supabase/002_points.sql in the Supabase SQL Editor first.' : '')); return; }
+  await load();
+}
+
 $('rows').addEventListener('click', e => {
+  const g = e.target.closest('[data-gift]');
+  if (g) { giveCoins(g.dataset.gift); return; }
   const b = e.target.closest('[data-ban],[data-unban]'); if (!b) return;
   setBan(b.dataset.ban || b.dataset.unban, !!b.dataset.ban);
 });
