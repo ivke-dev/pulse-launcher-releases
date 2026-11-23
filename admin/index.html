@@ -139,6 +139,14 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .sk-prev span:nth-of-type(1) { left: 76px; } .sk-prev span:nth-of-type(2) { left: 132px; opacity: .8; } .sk-prev span:nth-of-type(3) { left: 188px; opacity: .6; }
 .sk-prev.snow::after { content: "❄ ❅ ❆ ❄ ❅"; position: absolute; inset: 0; color: #fff; opacity: .5; font-size: 14px; letter-spacing: 18px; padding: 26px 0 0 70px; }
 .check { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.bp-modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 30px; }
+.bp-box { width: min(980px, 100%); max-height: 88vh; overflow: auto; }
+.bp-head { display: flex; justify-content: space-between; align-items: center; }
+.bp-box h4 { margin: 16px 0 8px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.bp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+.bp-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; background: var(--raise); border: 2px solid transparent; border-radius: 8px; cursor: pointer; color: var(--text); opacity: .55; }
+.bp-tile img { width: 64px; height: 48px; object-fit: contain; } .bp-tile small { font-size: 11px; }
+.bp-tile.on { opacity: 1; border-color: #34d399; background: rgba(52,211,153,.1); } .bp-tile:hover { opacity: 1; }
 .soon-box b { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
 </style>
 </head>
@@ -353,6 +361,11 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <table><thead><tr><th>Player</th><th>Level</th><th>XP</th><th>Badges</th><th></th></tr></thead><tbody id="lRows"></tbody></table>
       </div>
     </section>
+
+    <div class="bp-modal" id="bpModal" hidden><div class="card bp-box">
+      <div class="bp-head"><h3 id="bpTitle">Badges</h3><button class="btn" id="bpClose" type="button">Done</button></div>
+      <p class="reason">Click a badge to give it; click a highlighted one to take it away. XP changes right away.</p>
+      <div id="bpBody"></div></div></div>
 
     <!-- Users -->
     <section id="tab-users">
@@ -681,6 +694,65 @@ $('mkList').addEventListener('click', async e => {
   if (error) alert(error.message); loadMarketAdmin();
 });
 
+
+/* ---------- Badge art for the badges Pulse gives by itself (drawn here, no pictures needed) ---------- */
+const PURCHASE_TIERS = [1, 5, 10, 25, 50, 100, 250, 500].concat(Array.from({ length: 40 }, (_, i) => (i + 1) * 1000));
+function badgeLabel(series, tier) {
+  if (series === 'months') return String(tier);
+  return tier >= 10000 ? `${tier / 1000}K` : tier >= 1000 ? `${tier / 1000}K+` : `${tier}+`;
+}
+const _artCache = {};
+function sysBadgeArt(series, tier) {
+  const key = series + ':' + tier;
+  if (_artCache[key]) return _artCache[key];
+  let svg;
+  if (series === 'months') {
+    // metal tile with a coloured panel; the colour family changes every few months
+    const groups = [['#1d2b44', '#3c5a86', '#9fc3ff'], ['#16233c', '#2e6bd6', '#ffd27a'], ['#22262e', '#4a5160', '#d9dee6'], ['#2a1d44', '#7347c2', '#e6d6ff'],
+                    ['#123a35', '#1fbf98', '#e8fff8'], ['#3b2a0c', '#e0a43a', '#fff2c8'], ['#3a1020', '#d23c5e', '#ffd9e2'], ['#0d2f3a', '#20a5c9', '#d6f6ff']];
+    const g = tier <= 4 ? groups[0] : tier <= 9 ? groups[1] : tier <= 12 ? groups[2] : tier <= 15 ? groups[3] : tier <= 18 ? groups[4] : tier <= 21 ? groups[5] : groups[6 + (Math.floor((tier - 22) / 3) % 2)];
+    const big = tier >= 100;
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs>
+      <linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfd6e2"/><stop offset=".45" stop-color="#5d6676"/><stop offset="1" stop-color="#252a33"/></linearGradient>
+      <linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g[1]}"/><stop offset="1" stop-color="${g[0]}"/></linearGradient>
+      <radialGradient id="gl" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="${g[2]}" stop-opacity=".35"/><stop offset="1" stop-color="${g[2]}" stop-opacity="0"/></radialGradient></defs>
+      <rect x="2" y="2" width="76" height="76" rx="7" fill="url(#m)"/><rect x="5" y="5" width="70" height="70" rx="5" fill="#141820" opacity=".55"/>
+      <rect x="13" y="19" width="54" height="42" rx="6" fill="url(#p)" stroke="${g[2]}" stroke-opacity=".55" stroke-width="1.5"/>
+      <rect x="13" y="19" width="54" height="42" rx="6" fill="url(#gl)"/>
+      <path d="M8 8h18M8 8v10M72 72h-18M72 72v-10" stroke="#fff" stroke-opacity=".35" stroke-width="2" fill="none"/>
+      <text x="40" y="${big ? 48 : 50}" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="${big ? 19 : 26}" fill="#fff" style="paint-order:stroke" stroke="${g[0]}" stroke-width="3">${tier}</text></svg>`;
+  } else {
+    // coloured card with a chunky 3D number; patterns appear on the big tiers
+    const i = Math.max(0, PURCHASE_TIERS.indexOf(tier));
+    const hue = (i * 47 + 200) % 360, c1 = `hsl(${hue},70%,46%)`, c2 = `hsl(${(hue + 30) % 360},75%,30%)`, ink = `hsl(${(hue + 180) % 360},90%,82%)`;
+    const pat = i < 8 ? '' : ['<path d="M-10 70 L70 -10 M10 70 L90 -10 M30 70 L110 -10" stroke="#fff" stroke-opacity=".12" stroke-width="8"/>',
+      '<g fill="#fff" fill-opacity=".14">' + Array.from({ length: 30 }, (_, k) => `<circle cx="${(k * 37) % 96}" cy="${(k * 23) % 64}" r="${1 + (k % 3)}"/>`).join('') + '</g>',
+      '<g fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="2">' + Array.from({ length: 6 }, (_, k) => `<path d="M${k * 18 - 4} 64 l9 -14 l9 14"/>`).join('') + Array.from({ length: 6 }, (_, k) => `<path d="M${k * 18 + 5} 18 l9 -14 l9 14"/>`).join('') + '</g>',
+      '<g fill="none" stroke="#fff" stroke-opacity=".13" stroke-width="2"><circle cx="78" cy="10" r="14"/><circle cx="78" cy="10" r="24"/><circle cx="78" cy="10" r="34"/></g>'][i % 4];
+    const label = badgeLabel(series, tier), fs = label.length >= 4 ? 22 : label.length === 3 ? 26 : 30;
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64"><defs>
+      <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+      <clipPath id="c"><rect x="2" y="2" width="92" height="60" rx="6"/></clipPath></defs>
+      <rect x="2" y="2" width="92" height="60" rx="6" fill="url(#b)"/>
+      <g clip-path="url(#c)">${pat}<path d="M24 64 L94 -6 L120 20 L76 64 Z" fill="#000" fill-opacity=".28"/></g>
+      <rect x="2.5" y="2.5" width="91" height="59" rx="6" fill="none" stroke="#fff" stroke-opacity=".35"/>
+      <g font-family="'Arial Black', Impact, 'Segoe UI', sans-serif" font-weight="900" font-size="${fs}" text-anchor="middle">
+        ${[5, 4, 3, 2].map(d => `<text x="${48 + d}" y="${42 + d}" fill="#0c0d12" fill-opacity=".85">${label}</text>`).join('')}
+        <text x="48" y="42" fill="${ink}" stroke="#fff" stroke-opacity=".55" stroke-width=".6">${label}</text></g></svg>`;
+  }
+  return (_artCache[key] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+}
+const badgeIcon = b => b && (b.icon_url || (b.series ? sysBadgeArt(b.series, b.tier) : ''));
+// Purchases / Months badges show as one badge each: the highest tier reached
+function collapseBadges(list) {
+  const best = {}, out = [];
+  for (const b of list || []) {
+    if (!b.series) { out.push(b); continue; }
+    if (!best[b.series] || b.tier > best[b.series].tier) best[b.series] = b;
+  }
+  return [...Object.values(best), ...out];
+}
+
 /* ---------- Levels + badges ---------- */
 let badges = [], userBadges = [];
 function levelHTML(n) {
@@ -693,7 +765,12 @@ async function loadLevels() {
   if (r1.error) { $('bList').innerHTML = `<div class="empty">${/pulse_badges/.test(r1.error.message) ? 'Run supabase/009_levels.sql in the Supabase SQL Editor first.' : esc(r1.error.message)}</div>`; return; }
   badges = r1.data;
   userBadges = (await db.from('pulse_user_badges').select('*').limit(20000)).data || [];
-  $('bList').innerHTML = badges.map(b => `<div class="post"><div class="thumb badge" style="${b.icon_url ? `background-image:url('${esc(b.icon_url)}')` : ''}"></div>
+  const own = badges.filter(b => !b.series), auto = badges.filter(b => b.series);
+  const autoInfo = auto.length ? `<div class="post"><div class="thumb badge" style="background-image:url('${sysBadgeArt('purchases', 25)}')"></div>
+      <div><b>Automatic badges</b><p>Purchases (${auto.filter(b => b.series === 'purchases').length} tiers) and Months on Pulse (${auto.filter(b => b.series === 'months').length}). Pulse gives them by itself; you can also give them with “Badges” below.</p>
+      <div class="meta">${userBadges.filter(x => auto.some(b => b.id === x.badge_id)).length} given</div></div></div>`
+    : `<div class="post"><div><b>Automatic badges</b><p>Run supabase/017_auto_badges.sql to add the Purchases and Months badges.</p></div></div>`;
+  $('bList').innerHTML = autoInfo + own.map(b => `<div class="post"><div class="thumb badge" style="${b.icon_url ? `background-image:url('${esc(b.icon_url)}')` : ''}"></div>
       <div><b>${esc(b.name)}</b><p>${esc(b.description)}</p><div class="meta">${b.xp.toLocaleString()} XP · ${userBadges.filter(x => x.badge_id === b.id).length} players</div></div>
       <div class="acts"><button class="btn small danger" data-bdel="${b.id}">Delete</button></div></div>`).join('') || '<div class="empty">No badges yet.</div>';
   renderLevelRows();
@@ -702,16 +779,40 @@ function renderLevelRows() {
   const q = $('lSearch').value.trim().toLowerCase();
   const list = users.filter(u => !q || [u.persona, u.display_name, u.steamid, u.pulse_id].some(v => (v || '').toLowerCase().includes(q)));
   $('lRows').innerHTML = list.map(u => {
-    const xp = userXp(u), mine = userBadges.filter(x => x.pulse_id === u.pulse_id).map(x => badges.find(b => b.id === x.badge_id)).filter(Boolean);
+    const xp = userXp(u), mine = collapseBadges(userBadges.filter(x => x.pulse_id === u.pulse_id).map(x => badges.find(b => b.id === x.badge_id)).filter(Boolean));
     return `<tr><td><div class="user">${u.avatar ? `<img src="${esc(u.avatar)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph"></div>'}<div><b>${esc(u.display_name || u.persona || 'Unknown')}</b><span class="reason mono">${esc(u.pulse_id)}</span></div></div></td>
       <td>${levelHTML(xp / 500)}</td><td>${xp.toLocaleString()} <span class="reason">(${(500 - xp % 500)} to next)</span></td>
-      <td><div class="bicons">${mine.map(b => b.icon_url ? `<img src="${esc(b.icon_url)}" title="${esc(b.name)}" alt="">` : `<span class="chip ok">${esc(b.name)}</span>`).join('')}</div></td>
+      <td><div class="bicons">${mine.map(b => badgeIcon(b) ? `<img src="${esc(badgeIcon(b))}" title="${esc(b.name)}" alt="">` : `<span class="chip ok">${esc(b.name)}</span>`).join('')}</div></td>
       <td class="acts"><button class="btn small" data-setlvl="${esc(u.pulse_id)}">Set level</button>
         <button class="btn small gift" data-givexp="${esc(u.pulse_id)}">Give XP</button>
         <button class="btn small" data-badgeto="${esc(u.pulse_id)}">Badges</button></td></tr>`;
   }).join('') || '<tr><td colspan="5" class="empty">No players.</td></tr>';
 }
 $('lSearch').addEventListener('input', renderLevelRows);
+// Give / take any badge: a grid with every badge (your own, Purchases tiers, Months)
+let bpFor = null;
+function openBadgePicker(id, who) {
+  bpFor = id;
+  const has = new Set(userBadges.filter(x => x.pulse_id === id).map(x => x.badge_id));
+  const tile = b => `<button class="bp-tile${has.has(b.id) ? ' on' : ''}" data-bpick="${b.id}" title="${esc(b.name)} · ${b.xp} XP">
+      ${badgeIcon(b) ? `<img src="${esc(badgeIcon(b))}" alt="">` : '<span class="ph">🏅</span>'}<small>${esc(b.series ? badgeLabel(b.series, b.tier) : b.name)}</small></button>`;
+  const group = (t, list) => list.length ? `<h4>${t}</h4><div class="bp-grid">${list.map(tile).join('')}</div>` : '';
+  const byTier = (a, b) => a.tier - b.tier;
+  $('bpTitle').textContent = `Badges of ${who}`;
+  $('bpBody').innerHTML = group('Your badges', badges.filter(b => !b.series))
+    + group('Purchases', badges.filter(b => b.series === 'purchases').sort(byTier))
+    + group('Months on Pulse', badges.filter(b => b.series === 'months').sort(byTier));
+  $('bpModal').hidden = false;
+}
+$('bpBody').addEventListener('click', async e => {
+  const t = e.target.closest('[data-bpick]'); if (!t || !bpFor) return;
+  const on = !t.classList.contains('on');
+  const { error } = await db.rpc('pulse_admin_badge', { p_pulse_id: bpFor, p_badge: Number(t.dataset.bpick), p_on: on });
+  if (error) return alert('Could not save: ' + error.message);
+  t.classList.toggle('on', on);
+  userBadges = on ? [...userBadges, { pulse_id: bpFor, badge_id: Number(t.dataset.bpick) }] : userBadges.filter(x => !(x.pulse_id === bpFor && x.badge_id === Number(t.dataset.bpick)));
+});
+$('bpClose').addEventListener('click', async () => { $('bpModal').hidden = true; bpFor = null; await load(); loadLevels(); });
 $('bForm').addEventListener('submit', async e => {
   e.preventDefault(); setMsg('bMsg', 'Saving…');
   try {
@@ -741,11 +842,7 @@ $('lRows').addEventListener('click', async e => {
     res = await db.rpc('pulse_admin_give_xp', { p_pulse_id: id, p_xp: parseInt(v, 10) });
   } else {
     if (!badges.length) return alert('Make a badge first.');
-    const has = userBadges.filter(x => x.pulse_id === id).map(x => x.badge_id);
-    const lines = badges.map((b, i) => `${i + 1}. ${has.includes(b.id) ? '✓ ' : ''}${b.name} (${b.xp} XP)`).join('\n');
-    const v = prompt(`Badges of ${who}:\n${lines}\n\nType a number to give it (or take it away if it has ✓):`, ''); if (!v) return;
-    const b = badges[parseInt(v, 10) - 1]; if (!b) return alert('No badge with that number.');
-    res = await db.rpc('pulse_admin_badge', { p_pulse_id: id, p_badge: b.id, p_on: !has.includes(b.id) });
+    return openBadgePicker(id, who);
   }
   if (res.error) alert('Could not save: ' + res.error.message + (res.error.code === 'PGRST202' ? '\n\nRun supabase/009_levels.sql first.' : ''));
   await load(); loadLevels();
