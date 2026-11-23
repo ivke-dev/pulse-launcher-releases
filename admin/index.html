@@ -288,7 +288,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
           <input type="file" id="gFile" accept=".zip,.exe" hidden>
           <div class="up" id="gUp" hidden></div>
           <div class="msg" id="gFileMsg"></div>
-          <label for="gDl">…or a direct download link (https, must download the .zip/.exe directly, e.g. a GitHub release file)</label><input type="text" id="gDl" placeholder="https://…">
+          <label for="gDl">…or direct download link(s) — https, must download the file directly (e.g. a GitHub release file). A big game in parts: one link per line, in order (game.zip.001, .002, …) — Pulse joins them.</label>
+          <textarea id="gDl" rows="2" spellcheck="false" placeholder="https://github.com/you/pulse-games/releases/download/…/game.zip"></textarea>
+          <div class="msg" id="gDlInfo"></div>
           <label for="gExe">Game .exe inside the zip (optional — Pulse finds it by itself)</label><input type="text" id="gExe" maxlength="120" placeholder="NeonRun.exe">
           <label>Achievements (unlocked by playtime)</label>
           <div id="gAchs"></div>
@@ -899,6 +901,7 @@ $('pRows').addEventListener('click', e => {
 });
 
 /* ---------- Uploads with a progress bar (XHR: fetch can't report upload progress) ---------- */
+const MAX_UPLOAD_MB = 50;                       // Supabase Free: 50 MB per file (Pro can raise it in Storage settings)
 const fmtMB = n => n >= 1073741824 ? (n / 1073741824).toFixed(2) + ' GB' : (n / 1048576).toFixed(1) + ' MB';
 function fmtLeft(s) { return !isFinite(s) ? '' : s < 60 ? `${Math.ceil(s)} s left` : s < 3600 ? `${Math.ceil(s / 60)} min left` : `${(s / 3600).toFixed(1)} h left`; }
 let floatUp = null;
@@ -937,8 +940,15 @@ function storageUpload(bucket, path, file, contentType, box) {
       xhr.setRequestHeader('Content-Type', contentType || 'application/octet-stream');
       xhr.setRequestHeader('x-upsert', 'false');
       xhr.setRequestHeader('cache-control', 'max-age=3600');
-      let last = 0;
-      xhr.upload.onprogress = e => { if (performance.now() - last > 150 || e.loaded === e.total) { last = performance.now(); draw(e.loaded, ''); } };
+      let last = 0, moved = performance.now(), sent = 0, stalled = false;
+      const watch = setInterval(() => {                 // nothing sent for 30 s: the server stopped taking it
+        if (performance.now() - moved > 30000 && sent < file.size) { stalled = true; clearInterval(watch); xhr.abort(); }
+      }, 2000);
+      xhr.onloadend = () => clearInterval(watch);
+      xhr.upload.onprogress = e => {
+        if (e.loaded > sent) { sent = e.loaded; moved = performance.now(); }
+        if (performance.now() - last > 150 || e.loaded === e.total) { last = performance.now(); draw(e.loaded, ''); }
+      };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           draw(file.size, 'done', 'Done');
@@ -951,7 +961,10 @@ function storageUpload(bucket, path, file, contentType, box) {
         draw(0, 'fail', m); reject(new Error(m));
       };
       xhr.onerror = () => { draw(0, 'fail', 'Connection lost'); reject(new Error('Connection lost during the upload')); };
-      xhr.onabort = () => { draw(0, 'fail', 'Cancelled'); reject(new Error(cancelled ? 'Upload cancelled' : 'Upload stopped')); };
+      xhr.onabort = () => {
+        draw(sent, 'fail', stalled ? 'Stopped: no progress for 30 s' : 'Cancelled');
+        reject(new Error(cancelled ? 'Upload cancelled' : 'The upload stopped moving for 30 seconds — the file may be bigger than your Supabase plan allows (Free: 50 MB). 413'));
+      };
       xhr.send(file);
     });
   })();
@@ -1013,6 +1026,12 @@ $('gFileDrop').addEventListener('click', () => $('gFile').click());
 $('gFile').addEventListener('change', async () => {
   const f = $('gFile').files[0]; if (!f) return;
   if (!/\.(zip|exe)$/i.test(f.name)) { setMsg('gFileMsg', 'Upload a .zip or .exe file.', true); return; }
+  if (f.size > MAX_UPLOAD_MB * 1048576) {
+    $('gFile').value = '';
+    setMsg('gFileMsg', `${f.name} is ${fmtMB(f.size)} — the Supabase Free plan takes files up to ${MAX_UPLOAD_MB} MB, so this upload would stop. ` +
+      `Upload big games with tools\\upload_game.bat on your PC instead (drag the file onto it): it puts the game on GitHub in parts and copies the links — paste them in the box below.`, true);
+    return;
+  }
   setMsg('gFileMsg', 'Keep this page open until the upload finishes.');
   const path = `${Date.now()}-${f.name.replace(/[^A-Za-z0-9._-]+/g, '_')}`;
   $('gSubmit').disabled = true; $('gFileDrop').style.pointerEvents = 'none';
@@ -1033,9 +1052,14 @@ $('gFile').addEventListener('change', async () => {
 function clearGameForm() {
   gFileSize = 0; $('gFileText').textContent = 'Click to upload the game file — players download it inside Pulse'; setMsg('gFileMsg', ''); $('gUp').hidden = true;
   gEditing = null; $('gForm').reset(); $('gAchs').innerHTML = ''; setDrop('banner', null); setDrop('icon', null);
-  $('gFormTitle').textContent = 'Add a game'; $('gSubmit').textContent = 'Add game'; setMsg('gMsg', '');
+  $('gFormTitle').textContent = 'Add a game'; $('gSubmit').textContent = 'Add game'; setMsg('gMsg', ''); dlInfo();
 }
 $('gClear').addEventListener('click', clearGameForm);
+function dlInfo() {
+  const l = $('gDl').value.split(/\s+/).filter(Boolean);
+  $('gDlInfo').textContent = l.length > 1 ? `${l.length} parts — Pulse downloads them in this order and joins them into one file.` : '';
+}
+$('gDl').addEventListener('input', dlInfo);
 function gameRowHTML(g) {
   const sale = g.discount_pct && (!g.discount_until || new Date(g.discount_until) > new Date());
   return `<div class="post">
@@ -1066,8 +1090,10 @@ $('gForm').addEventListener('submit', async e => {
                           minutes: Math.max(0, parseInt(row.querySelector('.a-min').value || '0', 10) || 0),
                           icon_url: await uploadImage(picked[row.dataset.slot], 'achievements') });
     }
-    const dl = $('gDl').value.trim();
-    if (dl && !dl.startsWith('https://')) throw new Error('The download link must start with https://');
+    const links = $('gDl').value.split(/\s+/).filter(Boolean);
+    if (links.some(u => !u.startsWith('https://'))) throw new Error('Every download link must start with https://');
+    if (links.length > 64) throw new Error('Up to 64 parts.');
+    const dl = links.join('\n');
     const row = {
       title: $('gTitle').value.trim(), developer: $('gDev').value.trim(), short_desc: $('gShort').value.trim(),
       description: $('gDesc').value.trim(), price_points: Math.max(0, parseInt($('gPrice').value || '0', 10)),
@@ -1101,7 +1127,7 @@ $('gList').addEventListener('click', async e => {
     $('gTitle').value = g.title; $('gDev').value = g.developer; $('gShort').value = g.short_desc; $('gDesc').value = g.description;
     $('gPrice').value = g.price_points; $('gDisc').value = g.discount_pct;
     $('gEur').value = ((g.price_cents || 0) / 100).toFixed(2); $('gShots').value = (g.screenshots || []).join('\n'); $('gDiscUntil').value = toLocalInput(g.discount_until);
-    $('gDl').value = g.download_url; $('gPub').checked = g.published; $('gExe').value = g.launch_exe || ''; gFileSize = g.download_size || 0;
+    $('gDl').value = g.download_url; dlInfo(); $('gPub').checked = g.published; $('gExe').value = g.launch_exe || ''; gFileSize = g.download_size || 0;
     setDrop('banner', g.banner_url || null); setDrop('icon', g.icon_url || null);
     (g.achievements || []).forEach(achRow);
     $('gFormTitle').textContent = 'Edit ' + g.title; $('gSubmit').textContent = 'Save changes';
