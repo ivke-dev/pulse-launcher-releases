@@ -84,6 +84,20 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .form textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
 .form input:focus, .form textarea:focus, .form select:focus { outline: none; border-color: var(--violet); }
 .form h3, .card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 17px; }
+.up { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: var(--raise); border: 1px solid var(--line); }
+.up[hidden] { display: none; }
+.up-top { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.up-top b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-top .pct { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+.up-bar { margin-top: 9px; height: 8px; border-radius: 4px; background: var(--raise-2); overflow: hidden; }
+.up-bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--grad); transition: width .25s;
+  background-size: 200% 100%; animation: upMove 1.6s linear infinite; }
+.up.done .up-bar i { background: var(--ok); animation: none; } .up.fail .up-bar i { background: var(--err); animation: none; }
+@keyframes upMove { to { background-position: -200% 0; } }
+.up-sub { display: flex; justify-content: space-between; gap: 10px; margin-top: 7px; font-size: 12px; color: var(--muted); }
+.up-x { padding: 4px 10px; border-radius: 8px; background: none; border: 1px solid var(--line); color: var(--muted); font-size: 12px; cursor: pointer; }
+.up-x:hover { color: var(--err); border-color: var(--err); }
+.up-float { position: fixed; right: 20px; bottom: 20px; z-index: 90; width: 340px; margin: 0; box-shadow: 0 18px 50px rgba(0,0,0,.55); }
 .drop { margin-top: 6px; border: 1px dashed #343b50; border-radius: 12px; padding: 14px; text-align: center; color: var(--muted); font-size: 13px; cursor: pointer; }
 .drop:hover { border-color: var(--violet); color: var(--text); }
 .drop img { display: block; max-width: 100%; max-height: 200px; margin: 0 auto 8px; border-radius: 8px; }
@@ -272,6 +286,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
           <label>Game file (.zip with the game, or a single .exe)</label>
           <div class="drop" id="gFileDrop"><span id="gFileText">Click to upload the game file — players download it inside Pulse</span></div>
           <input type="file" id="gFile" accept=".zip,.exe" hidden>
+          <div class="up" id="gUp" hidden></div>
           <div class="msg" id="gFileMsg"></div>
           <label for="gDl">…or a direct download link (https, must download the .zip/.exe directly, e.g. a GitHub release file)</label><input type="text" id="gDl" placeholder="https://…">
           <label for="gExe">Game .exe inside the zip (optional — Pulse finds it by itself)</label><input type="text" id="gExe" maxlength="120" placeholder="NeonRun.exe">
@@ -883,6 +898,66 @@ $('pRows').addEventListener('click', e => {
   const b = e.target.closest('[data-bal]'); if (b) giveBalance(b.dataset.bal).then(renderPoints);
 });
 
+/* ---------- Uploads with a progress bar (XHR: fetch can't report upload progress) ---------- */
+const fmtMB = n => n >= 1073741824 ? (n / 1073741824).toFixed(2) + ' GB' : (n / 1048576).toFixed(1) + ' MB';
+function fmtLeft(s) { return !isFinite(s) ? '' : s < 60 ? `${Math.ceil(s)} s left` : s < 3600 ? `${Math.ceil(s / 60)} min left` : `${(s / 3600).toFixed(1)} h left`; }
+let floatUp = null;
+function upBox(el) {
+  if (!el) {                                   // images: a small box in the corner
+    if (!floatUp) { floatUp = document.createElement('div'); floatUp.className = 'up up-float'; document.body.appendChild(floatUp); }
+    el = floatUp;
+  }
+  return el;
+}
+function storageUpload(bucket, path, file, contentType, box) {
+  box = upBox(box);
+  let xhr = null, cancelled = false;
+  const t0 = performance.now(), samples = [];
+  const draw = (loaded, state, note) => {
+    const pct = file.size ? Math.min(100, Math.floor(loaded / file.size * 100)) : 0;
+    const now = performance.now();
+    samples.push([now, loaded]); while (samples.length > 1 && now - samples[0][0] > 3000) samples.shift();
+    const dt = (now - samples[0][0]) / 1000, speed = dt > .3 ? (loaded - samples[0][1]) / dt : loaded / Math.max(.3, (now - t0) / 1000);
+    box.className = box.className.replace(/\b(done|fail)\b/g, '').trim() + (state ? ' ' + state : '');
+    box.hidden = false;
+    box.innerHTML = `<div class="up-top"><b title="${esc(file.name)}">${state === 'done' ? '✓ Uploaded' : state === 'fail' ? 'Upload failed' : 'Uploading'} ${esc(file.name)}</b>
+        <span class="pct">${pct}%</span>${state ? '' : '<button class="up-x" type="button">Cancel</button>'}</div>
+      <div class="up-bar"><i style="width:${state === 'done' ? 100 : pct}%"></i></div>
+      <div class="up-sub"><span>${fmtMB(loaded)} of ${fmtMB(file.size)}</span><span>${note || (speed > 0 && !state ? fmtMB(speed) + '/s · ' + fmtLeft((file.size - loaded) / speed) : '')}</span></div>`;
+    const x = box.querySelector('.up-x'); if (x) x.onclick = () => { cancelled = true; xhr && xhr.abort(); };
+  };
+  const promise = (async () => {
+    const token = (await db.auth.getSession()).data.session?.access_token || SUPABASE_ANON_KEY;
+    draw(0, '', 'Starting…');
+    return new Promise((resolve, reject) => {
+      xhr = new XMLHttpRequest();
+      xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('Content-Type', contentType || 'application/octet-stream');
+      xhr.setRequestHeader('x-upsert', 'false');
+      xhr.setRequestHeader('cache-control', 'max-age=3600');
+      let last = 0;
+      xhr.upload.onprogress = e => { if (performance.now() - last > 150 || e.loaded === e.total) { last = performance.now(); draw(e.loaded, ''); } };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          draw(file.size, 'done', 'Done');
+          if (box === floatUp) setTimeout(() => { if (floatUp.classList.contains('done')) floatUp.hidden = true; }, 2500);
+          return resolve(db.storage.from(bucket).getPublicUrl(path).data.publicUrl);
+        }
+        let m = xhr.statusText || 'HTTP ' + xhr.status;
+        try { const j = JSON.parse(xhr.responseText); m = j.message || j.error || m; } catch (e) {}
+        if (xhr.status === 413) m = 'Payload too large (413)';
+        draw(0, 'fail', m); reject(new Error(m));
+      };
+      xhr.onerror = () => { draw(0, 'fail', 'Connection lost'); reject(new Error('Connection lost during the upload')); };
+      xhr.onabort = () => { draw(0, 'fail', 'Cancelled'); reject(new Error(cancelled ? 'Upload cancelled' : 'Upload stopped')); };
+      xhr.send(file);
+    });
+  })();
+  return promise;
+}
+
 /* ---------- Image uploads (bucket pulse-media, admins only) ---------- */
 const picked = {};          // slot -> File or existing URL
 async function uploadImage(file, folder) {
@@ -891,9 +966,8 @@ async function uploadImage(file, folder) {
   if (file.size > 5 * 1024 * 1024) throw new Error('Images can be up to 5 MB.');
   const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-  const up = await db.storage.from('pulse-media').upload(path, file, { contentType: file.type, upsert: false });
-  if (up.error) throw new Error('Image upload failed: ' + up.error.message);
-  return db.storage.from('pulse-media').getPublicUrl(path).data.publicUrl;
+  try { return await storageUpload('pulse-media', path, file, file.type); }
+  catch (e) { throw new Error('Image upload failed: ' + e.message); }
 }
 function setDrop(slot, value) {
   picked[slot] = value || null;
@@ -939,20 +1013,25 @@ $('gFileDrop').addEventListener('click', () => $('gFile').click());
 $('gFile').addEventListener('change', async () => {
   const f = $('gFile').files[0]; if (!f) return;
   if (!/\.(zip|exe)$/i.test(f.name)) { setMsg('gFileMsg', 'Upload a .zip or .exe file.', true); return; }
-  setMsg('gFileMsg', `Uploading ${f.name} (${(f.size / 1048576).toFixed(1)} MB)… keep this page open.`);
+  setMsg('gFileMsg', 'Keep this page open until the upload finishes.');
   const path = `${Date.now()}-${f.name.replace(/[^A-Za-z0-9._-]+/g, '_')}`;
-  const up = await db.storage.from('pulse-games').upload(path, f, { contentType: f.name.toLowerCase().endsWith('.zip') ? 'application/zip' : 'application/octet-stream', upsert: false });
-  if (up.error) {
-    setMsg('gFileMsg', 'Upload failed: ' + up.error.message + (/exceeded|too large|413/i.test(up.error.message) ? ' — the file is bigger than your Supabase plan allows (Free: 50 MB). Use a download link instead (e.g. a GitHub release).' : ' (did you run 008_downloads.sql?)'), true);
+  $('gSubmit').disabled = true; $('gFileDrop').style.pointerEvents = 'none';
+  let url;
+  try {
+    url = await storageUpload('pulse-games', path, f, f.name.toLowerCase().endsWith('.zip') ? 'application/zip' : 'application/octet-stream', $('gUp'));
+  } catch (e) {
+    setMsg('gFileMsg', /cancel/i.test(e.message) ? 'Upload cancelled.' : 'Upload failed: ' + e.message + (/exceeded|too large|413/i.test(e.message) ? ' — the file is bigger than your Supabase plan allows (Free: 50 MB). Use a download link instead (e.g. a GitHub release).' : /cancel|stopped|connection/i.test(e.message) ? '' : ' (did you run 008_downloads.sql?)'), !/cancel/i.test(e.message));
     return;
+  } finally {
+    $('gSubmit').disabled = false; $('gFileDrop').style.pointerEvents = ''; $('gFile').value = '';
   }
-  $('gDl').value = db.storage.from('pulse-games').getPublicUrl(path).data.publicUrl;
+  $('gDl').value = url;
   gFileSize = f.size;
   $('gFileText').textContent = `✓ ${f.name} uploaded`;
   setMsg('gFileMsg', 'Uploaded. Save the game to publish it.');
 });
 function clearGameForm() {
-  gFileSize = 0; $('gFileText').textContent = 'Click to upload the game file — players download it inside Pulse'; setMsg('gFileMsg', '');
+  gFileSize = 0; $('gFileText').textContent = 'Click to upload the game file — players download it inside Pulse'; setMsg('gFileMsg', ''); $('gUp').hidden = true;
   gEditing = null; $('gForm').reset(); $('gAchs').innerHTML = ''; setDrop('banner', null); setDrop('icon', null);
   $('gFormTitle').textContent = 'Add a game'; $('gSubmit').textContent = 'Add game'; setMsg('gMsg', '');
 }
@@ -1240,9 +1319,8 @@ $('newsForm').addEventListener('submit', async e => {
     if (newsFile) {
       const ext = (newsFile.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
       const path = `news/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const up = await db.storage.from('pulse-media').upload(path, newsFile, { contentType: newsFile.type, upsert: false });
-      if (up.error) throw new Error('Image upload failed: ' + up.error.message + ' (did you run 004_news.sql?)');
-      image_url = db.storage.from('pulse-media').getPublicUrl(path).data.publicUrl;
+      try { image_url = await storageUpload('pulse-media', path, newsFile, newsFile.type); }
+      catch (e) { throw new Error('Image upload failed: ' + e.message + (/cancel/i.test(e.message) ? '' : ' (did you run 004_news.sql?)')); }
     }
     const row = { title: $('nTitle').value.trim(), body: $('nBody').value.trim(), kind: $('nKind').value, image_url };
     const who = (await db.auth.getUser()).data.user;
